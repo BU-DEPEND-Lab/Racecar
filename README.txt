@@ -1,4 +1,3 @@
-This is F1/10 Readme
 F1tenth
 File system
 
