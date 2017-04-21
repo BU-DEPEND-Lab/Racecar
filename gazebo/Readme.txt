@@ -44,7 +44,6 @@ or
 $ roslaunch racecar_gazebo racecar.launch
 
 
-## Run the keyboard controller ##
-$ source ~/racecar/devel/setup.bash
-$ rosrun racecar_control keyboard_teleop.py
-control the simulated car using W-A-S-D
+## How to control ##
+A keyboard controller will pop-up
+Click the controller, control the car using W-A-S-D
