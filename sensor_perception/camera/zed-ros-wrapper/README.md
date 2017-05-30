@@ -11,7 +11,7 @@ This package lets you use the ZED stereo camera with ROS. It outputs the camera 
 ### Prerequisites
 
 - Ubuntu 16.04
-- [ZED SDK](https://www.stereolabs.com/developers/) and its dependencies ([OpenCV](http://docs.opencv.org/3.1.0/d7/d9f/tutorial_linux_install.html), [CUDA](https://developer.nvidia.com/cuda-downloads))
+- [ZED SDK **2.0**](https://www.stereolabs.com/developers/) and its dependencies ([OpenCV](http://docs.opencv.org/3.1.0/d7/d9f/tutorial_linux_install.html), [CUDA](https://developer.nvidia.com/cuda-downloads))
 - [ROS Kinetic](http://wiki.ros.org/kinetic/Installation/Ubuntu)
 - [Point Cloud Library (PCL)](https://github.com/PointCloudLibrary/pcl)
 
@@ -35,7 +35,17 @@ Open a terminal and build the package:
 
     cd ~/catkin_ws/
     catkin_make
-    source ./devel/setup.bash
+    echo source $(pwd)/devel/setup.bash >> ~/.bashrc
+    source ~/.bashrc
+
+**Note:** If you are using a different console interface like zsh, you have to change the `source` command like this : `echo source $(pwd)/devel/setup.zsh >> ~/.zshrc` and `source ~/.zshrc`.
+
+**Error:** If an error about `/usr/lib/x86_64-linux-gnu/libEGL.so` is blocking the compilation, simply use the following command to repair the libEGl symlink. Then restart the `catkin_make` command.
+
+```
+#Only on libEGL error
+sudo rm /usr/lib/x86_64-linux-gnu/libEGL.so; sudo ln /usr/lib/x86_64-linux-gnu/libEGL.so.1 /usr/lib/x86_64-linux-gnu/libEGL.so
+```
 
 ### Run the program
 
@@ -45,33 +55,33 @@ Open a terminal and launch the wrapper:
 
 Open a second terminal to display the rectified left color image (reference view):
 
-    rosrun image_view image_view image:=/camera/rgb/image_rect_color
+    rosrun image_view image_view image:=/zed/rgb/image_rect_color
 
 ## Features
 
 ### Topics
 
 #### Left camera
-   - */camera/rgb/image_rect_color* : `Color rectified image (left RGB image by default).`
-   - */camera/rgb/image_raw_color* : `Color unrectified image (left RGB image by default).`
-   - */camera/rgb/camera_info* : `Camera calibration data.`
-   - */camera/left/image_rect_color* : `Color rectified left image.`
-   - */camera/left/image_raw_color* : `Color unrectified left image.`
-   - */camera/left/camera_info* : `Left camera calibration data.`
+   - */zed/rgb/image_rect_color* : `Color rectified image (left RGB image by default).`
+   - */zed/rgb/image_raw_color* : `Color unrectified image (left RGB image by default).`
+   - */zed/rgb/camera_info* : `Camera calibration data.`
+   - */zed/left/image_rect_color* : `Color rectified left image.`
+   - */zed/left/image_raw_color* : `Color unrectified left image.`
+   - */zed/left/camera_info* : `Left camera calibration data.`
 
 #### Right camera
-  - */camera/right/image_rect_color* : `Color rectified right image.`
-  - */camera/right/image_raw_color* : `Color unrectified right image.`
-  - */camera/right/camera_info* : `Right camera calibration data.`
+  - */zed/right/image_rect_color* : `Color rectified right image.`
+  - */zed/right/image_raw_color* : `Color unrectified right image.`
+  - */zed/right/camera_info* : `Right camera calibration data.`
 
 #### Depth and point cloud
-   - */camera/depth/depth_registered* : `Depth map image registered on left image (by default 32 bits float, in meters).`
-   - */camera/point_cloud/cloud_registered* : `Registered color point cloud.`
+   - */zed/depth/depth_registered* : `Depth map image registered on left image (by default 32 bits float, in meters).`
+   - */zed/point_cloud/cloud_registered* : `Registered color point cloud.`
 
 #### Visual odometry
-   - */camera/odom* : `Absolute 3D position and orientation relative to zed_initial_frame.`
+   - */zed/odom* : `Absolute 3D position and orientation relative to zed_initial_frame.`
 
-All topics have their *id* published.
+All topics have their *id* published. When using [*zed_multi_cam.launch*](https://github.com/stereolabs/zed-ros-wrapper/blob/master/launch/zed_multi_cam.launch) topics begin with */zed[CameraID]/...* (for instance */zed1/...*) instead of a pure */zed/...*.
 
 ### Launch file parameters
 
@@ -117,8 +127,7 @@ map
 ```
 
 
-
-## Using RVIZ
+## Using RVIZ
 
 rviz (ROS visualization) is a 3D visualizer for displaying sensor data and state information. Using rviz, you can visualize ZED left and right images, depth, point cloud and 3D trajectory.
 
@@ -148,3 +157,8 @@ However, the ROS layer introduces significant latency and a performance hit. If 
 #### Using multiple ZED
 
 The ZED camera uses the full USB 3.0 bandwidth to output video. When using multiple ZED, you may need to reduce camera framerate and resolution to avoid corrupted frames (green or purple frames). You can also use multiple GPUs to load-balance computations and improve performance.
+
+#### Jetson TK1 Support
+
+The support for the Jetson TK1 has been dropped with the ZED SDK 2.0, therefore this version of zed-ros-wrapper won't work on this board. 
+Please use this [version](https://github.com/stereolabs/zed-ros-wrapper/releases/tag/v1.2.0) alongside the [ZED SDK 1.2.0](https://www.stereolabs.com/developers/release/1.2/) instead.

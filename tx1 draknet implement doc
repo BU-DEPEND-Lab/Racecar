@@ -1,15 +1,20 @@
 TX1 system:
 TX1 is an arm 64 bit architecture system. This is relatively new architecture and Ubuntu 14.04 doesn’t support this architecture well. For instance, with Ubuntu 14.04 on this architecture, we can’t even install ROS by using sudo apt-get install command. We can only build from source. Ubuntu 16.04 addresses these issues and supports this architecture well. So we are using Ubuntu 16.04 on TX1.
+JetPack is an all-in-one package to flash TX1 with the latested OS image and some developer tools such as CUDA, OpenCV for tegra and so on. See the following link:
+http://docs.nvidia.com/jetpack-l4t/#developertools/mobile/jetpack/l4t/3.0/jetpack_l4t_install.htm
+
 
 ROS version:
-We are using ROS Kinetic in TX1 because Ubuntu 16.04 doesn’t support Indigo. However, using Kinetic causes some trouble when implement Darknet. This is because most of current work is based on Indigo so there are some modifications needed to make it work. 
+We are using ROS Kinetic in TX1 because Ubuntu 16.04 doesn’t support Indigo.
+ROS kinetic install guide on TX1:
+http://wiki.ros.org/kinetic/Installation/Ubuntu
 
 ZED-wrapper:
 ZED-wrapper is a ROS package which publishing the images from ZED camera through ROS topic. It also will calculate odometry which is quite useful in self-driving area. ZED wrapper is available through the following link:
 https://github.com/stereolabs/zed-ros-wrapper
 The version of ZED wrapper we are using is 2.0. This is the latest version and it has been optimized well comparing to ZED 1.2. Before installing zed-wrapper, we need to install ZED SDK. Just go to ZED website and install the same version as the the wrapper. Below is the link:
 https://www.stereolabs.com/developers/
-Another prerequisite is PCL library, this can be done via:
+Another prerequisite is PCL library, which is already included in ROS Desktop-Full installation. Also it  can be done via:
 sudo apt-get install ros-kinetic-pcl-ros &&
 sudo apt-get install ros-kinetic-pcl-conversions
 If the above commands don’t work, perhaps you need to build PCL from source:
@@ -25,16 +30,10 @@ First we have to make Darknet itself.Using the below link:
 https://github.com/pjreddie/darknet
 there is one modification here, open Makefile. Change GPU=0 to GPU=1 and change OPENCV=0 to OPENCV=1
 this enables compiling with CUDA and OPENCV.
-Second, this package has a prerequisite package cv_bridge. This can be done by using sudo apt-get command. However, when using this command in Kinetic, it will automaticly install OpenCV3 on TX1 and corrupted OpenCV2 that is supposed to be used by Darknet_ROS. So we have to build cv_bridge package from source. Below is the link:
-https://github.com/ros-perception/vision_opencv
-We have to modified the CmakeList file in this package. Go to line
-find_package(OpenCV REQUIRED)
-replace OpenCV with OPenCV 2
-Now the system will build this package without install OpenCV 3 on you system.
 Then build the darknet_ros package.First open CmakeList file in darknet_ros folder. Find this line:
 -O3 -gencode arch=compute_61,code=sm_61
 replace compute_61 and sm_61 with compute_53 and sm_53
 This is because we are using different GPU from them and 53 is the code for TX1
 There might be some cuda related lib link couln't find error, just Google it and there are many answers to it. 
-
+On TX1, darknet_ros with ZED camera could reach 8-10 FPS without OpenCV display. You can switch on display in darknet_ros.launch while the FPS will go down to 6-8 FPS.
 
