@@ -1,0 +1,4 @@
+1) change line 19 in racecar.launch to run the racecar_control_pid.launch file that runs the appropriate nodes:
+
+  <include file="$(find racecar_control)/launch/racecar_control_pid.launch" ns="/"/>
+
