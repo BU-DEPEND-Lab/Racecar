@@ -13,6 +13,10 @@
                                             left_steering_hinge_position_controller right_steering_hinge_position_controller
                                             joint_state_controller"/>
 
+
+
+                                       
+
   <!-- convert joint states to TF transforms for rviz, etc .-->
   <!--The final line starts a robot_state_publisher node that simply listens to /joint_states messages from the joint_state_controller then publishes the transforms to /tf. This allows you to see your simulated robot in Rviz as well as do other tasks.-->
 
@@ -28,5 +32,7 @@
 
   <!-- Allow for Gazebo to broadcast odom -->
   <node pkg="racecar_gazebo" name="gazebo_odometry_node" type="gazebo_odometry.py"/>
+
+
 
 </launch>
