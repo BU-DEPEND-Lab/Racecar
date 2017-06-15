@@ -3,7 +3,7 @@ import rospy
 from std_msgs.msg import Bool
 from std_msgs.msg import Float32
 from std_msgs.msg import Float64
-from race.msg import drive_param
+from racecar_control.msg import drive_param
 
 flag_move = 0
 

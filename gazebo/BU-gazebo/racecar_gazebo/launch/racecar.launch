@@ -15,7 +15,16 @@
   <!-- push robot_description to factory and spawn robot in gazebo -->
   <node name="racecar_spawn" pkg="gazebo_ros" type="spawn_model" output="screen" args="-urdf -param robot_description -model racecar -z 0.05" />
 
+  <!-- odom_to_base_link 
+  <node pkg="tf" type = "static_transform_publisher" name="odom_to_base_link" 
+    args="0 0 0 0 0 0 odom base_link 100" /> --> 
+
+  <!-- nav_to_base_link --> 
+  <node pkg="tf" type = "static_transform_publisher" name="nav_to_base_link" 
+    args="0 0 0 0 0 0 nav base_link 100" /> 
+
   <!-- ros_control racecar launch file -->
   <include file="$(find racecar_control)/launch/racecar_control.launch" ns="/"/>
+
 
 </launch>

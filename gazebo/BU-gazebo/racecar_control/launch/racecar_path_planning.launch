@@ -1,0 +1,39 @@
+<?xml version='1.0'?>
+
+<launch>
+
+  <!-- Load joint controller configurations from YAML file to parameter server -->
+  <rosparam file="$(find racecar_control)/config/racecar_control.yaml" command="load"/>
+
+  <!-- load the controllers -->
+  <!-- The controller_spawner node starts the  controllers for the robot by running a python script that makes a service call to the ros_control controller manager. The service calls tell the controller manager which controllers you want. It also loads additional controllers that publish the joint states of all the joints with hardware_interfaces and advertises the topic on /joint_states. The spawner is just a helper script for use with roslaunch.-->
+  <node name="controller_manager" pkg="controller_manager" type="spawner" respawn="false"
+        output="screen" ns="/racecar" args="left_rear_wheel_velocity_controller right_rear_wheel_velocity_controller
+                                            left_front_wheel_velocity_controller right_front_wheel_velocity_controller
+                                            left_steering_hinge_position_controller right_steering_hinge_position_controller
+                                            joint_state_controller"/>
+
+
+
+                                       
+
+  <!-- convert joint states to TF transforms for rviz, etc .-->
+  <!--The final line starts a robot_state_publisher node that simply listens to /joint_states messages from the joint_state_controller then publishes the transforms to /tf. This allows you to see your simulated robot in Rviz as well as do other tasks.-->
+
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">
+    <remap from="/joint_states" to="/racecar/joint_states" />
+  </node>
+
+
+  <!-- servo node -->
+  <node pkg="racecar_control" type="servo_commands.py" name="servo_commands" output="screen"> </node>
+
+
+
+
+  <!-- Allow for Gazebo to broadcast odom -->
+  <node pkg="racecar_gazebo" name="gazebo_odometry_node" type="gazebo_odometry.py"/>
+
+
+
+</launch>
