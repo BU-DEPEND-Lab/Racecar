@@ -20,6 +20,14 @@ global stop
 global X
 global Y
 global a
+global s
+global n
+global mvb
+global nmvb
+global obs
+global wal
+s = 40 # wheel base in cm
+n = 1 # steering ration (Assumed 1)
 X = 2048
 Y = 2048
 scale = (1495-1024)*(1/23.6212158203)
@@ -27,6 +35,11 @@ start = [1024,1024]
 stop = [1040,1024]
 x = [start[0],stop[0]]
 y = [start[1],stop[1]]
+
+mvb = 254
+nmvb = 205
+obs = 0
+wal = 150
 
 ###############################################################################
 #                          Function Definition
@@ -74,15 +87,15 @@ def Neighbors(x , pt):
         low = 1
         high = 2
     if x == 3:
-        neighbors = lambda x, y : [(x2, y2) for x2 in range(x-10, x+11)
-                               for y2 in range(y-10, y+11)
+        neighbors = lambda x, y : [(x2, y2) for x2 in range(x-20, x+21)
+                               for y2 in range(y-20, y+21)
                                if ((-1 < x <= X) and
                                    (-1 < y <= Y) and
                                    (x != x2 or y != y2) and
                                    (0 <= x2 <= X) and
                                    (0 <= y2 <= Y) and
-                                   ((abs(x2 - x) >9) or
-                                   (abs(y2 - y) >9)))]
+                                   ((abs(x2 - x) >18) or
+                                   (abs(y2 - y) >18)))]
         cnt = 0
         n = []
         for alt in neighbors(pt[0],pt[1]):
@@ -229,26 +242,26 @@ def SpeedList(Line, angleList):
     for pt in range(len(Line)-20):
         flag = 0
         for key in angleList.keys():
-
+            
+            minspeed = 100.0 - ((angleList[key]/45.0) * 70.0)
             """ Change ranges depending on use case """
-            # TODO: relate speed change to angle difference and momentum
             if (int(key) - pt) == 0:
-                speed = 30
-                speedlist[str(pt)] = speed
+                speed = minspeed
+                speedlist[str(pt)] = int(speed)
                 flag = 1                
                 break
             elif ((int(key) - pt) < 20) and ((int(key) - pt) > 0):
-                speed = 100 - (70.0*(1 - ((int(key) - pt))/20.0))
+                speed = 100 - ((100.0 - minspeed)*(1 - ((int(key) - pt))/20.0))
                 speedlist[str(pt)] = int(speed)
-                flag = 1
+                flag = 1                
                 break
             elif ((int(key) - pt)> -10) and ((int(key) - pt) < 0):
-                speed = 100 - (70.0*(1 + ((int(key) - pt))/10.0))
+                speed = 100 - ((100.0 - minspeed)*(1 + ((int(key) - pt))/10.0))
                 speedlist[str(pt)] = int(speed)
-                flag = 1
+                flag = 1                
                 break
             else:
-                flag = 1
+                flag = 1                
                 speedlist[str(pt)] = 100
         if flag == 0:
             speedlist[str(pt)] = 100
@@ -391,6 +404,22 @@ def LineComp(Line):
     
 pub = rospy.Publisher('path_planner',Float64MultiArray , queue_size=10)  
 
+###############################################################################
+#                          Function Definition
+#   Name  - TurnRadius
+#   Function  - This function calculates the turn radious of a car given 
+#               certain parameters
+#   Arguments  - angle -> angle of rotation, s-> wheel radius, 
+#                n-> steering ratio (Default = 1)
+###############################################################################
+
+def TurnRadius(angle, s, n = 1):
+    r = (s / (np.sqrt(2 - 2 * np.cos(2*angle/n))))
+    return r
+    
+    
+pub = rospy.Publisher('path_planner',Float64MultiArray , queue_size=10)  
+
 
 def callback(data):
     global X
@@ -402,16 +431,14 @@ def callback(data):
     X = len(a)-1
     Y = len(a[0])-1
     a = np.rot90(a,3)
-#    a = np.fliplr(a)
-#    print np.where(a == 100)
+
     """ Variable declerations for the Search tree that will begin from START """
     SetTrees = collections.defaultdict(list)
     SetTrees[str(start)].append(start)
     pos = str(start)
     SetDismissed = []
     n =  Neighbors(3,(start[0],start[1]))
-#    plt.imshow(a)
-#    plt.show()
+    AnglePrevRef = stop 
     
     """ Variable declerations for the Search tree that will begin from STOP """    
     SetTreesopp = collections.defaultdict(list)
@@ -419,6 +446,7 @@ def callback(data):
     SetLines = []
     posopp = str(stop)
     nopp = Neighbors(3,(stop[0],stop[1]))
+    AnglePrevRef = start
     
     """ Variable Declaration for The final path """
     LineFinal = []
@@ -438,70 +466,93 @@ def callback(data):
         minn = 100000000000 # High number as default distance
         for k in n:
             """ Find the optimal point, i.e. the point closest to the goal """
-            print a[k[0]][k[1]]," ", k             
-            if((k[0] - stop[0])**2 + (k[1] - stop[1])**2) < minn:
-                if a[k[0]][k[1]] != 0 or CheckValid(k,eval(pos)) == 0:
-                    SetDismissed.append(k)
-                if (k not in SetDismissed) and (str(k) not in SetTrees.keys()):
-                    p = k
-                    minn = (k[0] - stop[0])**2 + (k[1] - stop[1])**2
-        if  p == 0: # If the point selected is movable
-            ret = CheckDirect(p , SetTreesopp) # Check for direct line of sight
-            if (ret != 0): # There is direct line of sight
-                print "Reached Goal start"
-                GoalFlag = 1
-                
-                """ Add point and line of sight branch to tree """
-                SetLines.append([ret,p])
-                SetTrees[str(p)] = copy.deepcopy(SetTrees[pos])
-                SetTrees[str(p)].append(p)
-                
-                """ Show final tree from START """
-#                plt.imshow(a, extent=[0, np.shape(a)[1], np.shape(a)[0],0])
-#                prev = copy.deepcopy(start)
-#                for line in SetTrees[str(p)]:
-#                    LineFinal.append(line)
-#                    plt.plot([line[1],prev[1]],[line[0],prev[0]],color = 'blue')
-#                    prev = copy.deepcopy(line)
-#                prev = copy.deepcopy(stop)
-                
-                """ Show final tree from STOP """            
-#                for line in SetTreesopp[str(ret)]:
-#                    LineFinal2.append(line)
-#                    plt.plot([line[1],prev[1]],[line[0],prev[0]],color = 'blue')
-#                    prev = copy.deepcopy(line)  
-#                plt.plot([ret[1],p[1]],[ret[0],p[0]],color = 'blue')
-#                plt.show()
-                break
-            else: # There is no direct line of sight
-                
-                """ Add point to as a branch to START tree """
-                SetTrees[str(p)] = copy.deepcopy(SetTrees[pos])
-                SetTrees[str(p)].append(p)
-                SetLines.append([eval(pos),p])
-                
-                """ Choose next branch at random to search from """
-                pos = random.choice(SetTrees.keys())
-                n = Neighbors(3,(eval(pos)[0],eval(pos)[1]))
+            try:
+                print SetTrees[pos][-2],pos,k,(((k[0] - stop[0])**2 + (k[1] - stop[1])**2)),ang((SetTrees[pos][-2],eval(pos)),(eval(pos),k))
+                if(((((k[0] - stop[0])**2 + (k[1] - stop[1])**2)) < minn) and
+                    ang((SetTrees[pos][-2],eval(pos)),(eval(pos),k))<30):
+                    if a[k[0]][k[1]] != 254 or CheckValid(k,eval(pos)) == 0:
+                        SetDismissed.append(k)
+                    if (k not in SetDismissed) and (str(k) not in SetTrees.keys()):
+                        p = k
+                        minn = (k[0] - stop[0])**2 + (k[1] - stop[1])**2
+            except:
+                if((((k[0] - stop[0])**2 + (k[1] - stop[1])**2)) < minn):
+                    if a[k[0]][k[1]] != 254 or CheckValid(k,eval(pos)) == 0:
+                        SetDismissed.append(k)
+                    if (k not in SetDismissed) and (str(k) not in SetTrees.keys()):
+                        p = k
+                        minn = (k[0] - stop[0])**2 + (k[1] - stop[1])**2
+        if (str(p) not in SetTrees.keys()):
+            if a[p[0]][p[1]] == 254: # If the point selected is movable
+                ret = CheckDirect(p , SetTreesopp) # Check for direct line of sight
+                if (ret != 0): # There is direct line of sight
+                    print "Reached Goal start"
+                    GoalFlag = 1
     
-        else: # The point is not movable
-            SetDismissed.append(p) # Add point to not movable list
+                    
+                    """ Add point and line of sight branch to tree """
+                    SetLines.append([ret,p])
+                    SetTrees[str(p)] = copy.deepcopy(SetTrees[pos])
+                    SetTrees[str(p)].append(p)
+                    
+                    """ Show final tree from START """
+    #                plt.imshow(a, extent=[0, np.shape(a)[1], np.shape(a)[0],0])
+    #                prev = copy.deepcopy(start)
+    #                for line in SetTrees[str(p)]:
+    #                    LineFinal.append(line)
+    #                    plt.plot([line[1],prev[1]],[line[0],prev[0]],color = 'blue')
+    #                    prev = copy.deepcopy(line)
+    #                prev = copy.deepcopy(stop)
+                    
+                    """ Show final tree from STOP """            
+    #                for line in SetTreesopp[str(ret)]:
+    #                    LineFinal2.append(line)
+    #                    plt.plot([line[1],prev[1]],[line[0],prev[0]],color = 'blue')
+    #                    prev = copy.deepcopy(line)  
+    #                plt.plot([ret[1],p[1]],[ret[0],p[0]],color = 'blue')
+    #                plt.show()
+                    break
+                else: # There is no direct line of sight
+                    
+                    """ Add point to as a branch to START tree """
+                    SetTrees[str(p)] = copy.deepcopy(SetTrees[pos])
+                    print p
+                    SetTrees[str(p)].append(p)
+                    SetLines.append([eval(pos),p])
+                    
+                    """ Choose next branch at random to search from """
+                    pos = random.choice(SetTrees.keys())
+                    n = Neighbors(3,(eval(pos)[0],eval(pos)[1]))
+        
+            else: # The point is not movable
+                SetDismissed.append(p) # Add point to not movable list
+                pos = random.choice(SetTrees.keys()) # Choose next branch at random
+                n = Neighbors(3,(eval(pos)[0],eval(pos)[1]))
+        else:
             pos = random.choice(SetTrees.keys()) # Choose next branch at random
             n = Neighbors(3,(eval(pos)[0],eval(pos)[1]))
-    
+        
         """ Logic for tree search from STOP """        
         minn = 100000000000 # High number as default distance
         for k in nopp:
             popp = 0
             """ Find the optimal point, i.e. the point closest to the goal """
-            if((k[0] - start[0])**2 + (k[1] - start[1])**2) < minn:
-                print a[k[0]][k[1]], k 
-                if a[k[0]][k[1]] != 0 or CheckValid(k,eval(posopp)) == 0:
-                    SetDismissed.append(k)
-                if (k not in SetDismissed) and (str(k) not in SetTreesopp.keys()):
-                    popp = k
-                    minn = (start[0] - k[0])**2 + (start[1] - k[1])**2
-        if popp == 0: # If the point selected is movable
+            try:
+                if((((k[0] - start[0])**2 + (k[1] - start[1])**2) < minn) and
+                    ang((SetTreesopp[posopp][-2],eval(posopp)),(eval(posopp),k))<30):
+                    if a[k[0]][k[1]] != 254 or CheckValid(k,eval(posopp)) == 0:
+                        SetDismissed.append(k)
+                    if (k not in SetDismissed) and (str(k) not in SetTreesopp.keys()):
+                        popp = k
+                        minn = (start[0] - k[0])**2 + (start[1] - k[1])**2
+            except:
+                if(((k[0] - start[0])**2 + (k[1] - start[1])**2) < minn):
+                    if a[k[0]][k[1]] != 254 or CheckValid(k,eval(posopp)) == 0:
+                        SetDismissed.append(k)
+                    if (k not in SetDismissed) and (str(k) not in SetTreesopp.keys()):
+                        popp = k
+                        minn = (start[0] - k[0])**2 + (start[1] - k[1])**2
+        if a[popp[0]][popp[1]] == 254: # If the point selected is movable
             ret = CheckDirect(popp , SetTrees) # Check for direct line of sight
             if (ret != 0): # There is direct line of sight
                 GoalFlag = 1
