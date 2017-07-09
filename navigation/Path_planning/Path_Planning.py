@@ -36,9 +36,9 @@ stop = [1040,1024]
 x = [start[0],stop[0]]
 y = [start[1],stop[1]]
 
-mvb = 254
-nmvb = 205
-obs = 0
+mvb = 0
+nmvb = -1
+obs = 100
 wal = 150
 
 ###############################################################################
@@ -52,7 +52,6 @@ wal = 150
 def callback2(data):
     global start
     start = [int(data.pose.position.x*scale)+1024,int(data.pose.position.y*scale)+1024]
-    print start
     rate = rospy.Rate(1) # 10hz
 
 ###############################################################################
@@ -87,15 +86,15 @@ def Neighbors(x , pt):
         low = 1
         high = 2
     if x == 3:
-        neighbors = lambda x, y : [(x2, y2) for x2 in range(x-20, x+21)
-                               for y2 in range(y-20, y+21)
+        neighbors = lambda x, y : [(x2, y2) for x2 in range(x-10, x+11)
+                               for y2 in range(y-10, y+11)
                                if ((-1 < x <= X) and
                                    (-1 < y <= Y) and
                                    (x != x2 or y != y2) and
                                    (0 <= x2 <= X) and
                                    (0 <= y2 <= Y) and
-                                   ((abs(x2 - x) >18) or
-                                   (abs(y2 - y) >18)))]
+                                   ((abs(x2 - x) >8) or
+                                   (abs(y2 - y) >8)))]
         cnt = 0
         n = []
         for alt in neighbors(pt[0],pt[1]):
@@ -431,6 +430,7 @@ def callback(data):
     X = len(a)-1
     Y = len(a[0])-1
     a = np.rot90(a,3)
+    print start
 
     """ Variable declerations for the Search tree that will begin from START """
     SetTrees = collections.defaultdict(list)
@@ -447,7 +447,9 @@ def callback(data):
     posopp = str(stop)
     nopp = Neighbors(3,(stop[0],stop[1]))
     AnglePrevRef = start
-    
+    print a[start[0]][start[1]]
+    print a[stop[0]][stop[1]]
+
     """ Variable Declaration for The final path """
     LineFinal = []
     LineFinal2 = []
@@ -467,7 +469,7 @@ def callback(data):
         for k in n:
             """ Find the optimal point, i.e. the point closest to the goal """
             try:
-                print SetTrees[pos][-2],pos,k,(((k[0] - stop[0])**2 + (k[1] - stop[1])**2)),ang((SetTrees[pos][-2],eval(pos)),(eval(pos),k))
+#                print SetTrees[pos][-2],pos,k,(((k[0] - stop[0])**2 + (k[1] - stop[1])**2)),ang((SetTrees[pos][-2],eval(pos)),(eval(pos),k))
                 if(((((k[0] - stop[0])**2 + (k[1] - stop[1])**2)) < minn) and
                     ang((SetTrees[pos][-2],eval(pos)),(eval(pos),k))<30):
                     if a[k[0]][k[1]] != 254 or CheckValid(k,eval(pos)) == 0:
@@ -476,6 +478,7 @@ def callback(data):
                         p = k
                         minn = (k[0] - stop[0])**2 + (k[1] - stop[1])**2
             except:
+#                print pos,k,(((k[0] - stop[0])**2 + (k[1] - stop[1])**2)),CheckValid(k,eval(pos)),a[k[0]][k[1]]
                 if((((k[0] - stop[0])**2 + (k[1] - stop[1])**2)) < minn):
                     if a[k[0]][k[1]] != 254 or CheckValid(k,eval(pos)) == 0:
                         SetDismissed.append(k)
@@ -640,7 +643,9 @@ def callback(data):
 
 
 def bag_read():
-
+    stop[0]= input("Enter Stop x")
+    stop[1]= input("Enter Stop y")
+    
     rospy.init_node('bag_read', anonymous=True)
     rospy.Subscriber("slam_out_pose",PoseStamped , callback2)
     rospy.Subscriber("map", OccupancyGrid, callback)
