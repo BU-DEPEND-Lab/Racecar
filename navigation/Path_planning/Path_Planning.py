@@ -429,7 +429,8 @@ def callback(data):
     a = np.reshape(data.data,(2048,2048))
     X = len(a)-1
     Y = len(a[0])-1
-    a = np.rot90(a,3)
+    a = np.rot90(a,1)
+    a = np.flipud(a)
     print start
 
     """ Variable declerations for the Search tree that will begin from START """
