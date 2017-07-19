@@ -1,0 +1,21 @@
+Field Testing the robot
+
+Run each step in different terminals when connecting via ssh
+
+1) run slam node. Note this launch file is in the F1tenth GitHub repo in the Slam_Launch directory.
+
+$ roslaunch hector_slam_launch tutorial.launch 
+
+2) run path planner node and enter start and stop coordinates when prompted. Note that the starting point(origin) of the robot is 1024, 1024.
+
+$ rosrun race rrt_planner.py
+
+3) Drive the car manually to build a map using either the joystick node or keyboard node. Both can be launched with the launch file in step 1.
+
+Alternatively, manually control the robot using the keyboard node:
+$ rosrun race keyboard.py
+
+4) Run the pure pursuit controller node. This will control the car to follow the path produced by the path planner. Ctrl+C will exit the node and reset the steer and speed values to 0.
+
+$ rosrun race pure_pursuit_and_speed_controller.py
+
