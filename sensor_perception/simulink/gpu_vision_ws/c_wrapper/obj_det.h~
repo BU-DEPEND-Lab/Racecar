@@ -1,0 +1,10 @@
+#ifndef OBJ_DET_H_INCLUDED
+#define OBJ_DET_H_INCLUDED
+
+#define HEIGHT 540;
+#define WIDTH 
+
+
+int obj_det(short int a[540]);
+
+#endif // OBJ_DET_H_INCLUDED
