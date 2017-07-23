@@ -10,6 +10,13 @@ source ./devel/setup.bash
 roscore
 rosrun ros_caffe ros_caffe_test
 
+
+darknet_ros:
+cd [darknet_ros workspace]
+source ./devel/setup.bash
+roslaunch darknet_ros darknet_ros.launch
+
+
 remote access:
 wifi: connect to ubnt, manully set ip address and gateway
 ssh ubuntu@192.168.1.1
