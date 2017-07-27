@@ -52,7 +52,8 @@ $ rosrun joy joy_node
 ## rosbag:
 $ rosbag record -o /media/ubuntu/bc269b87-e580-431d-8779-a423f17ff2cf1/ -a
 
-## C++ Profiler (could be used to profile ROS cpp executable under [ROS_ws]/devel/bin/[package_name]):
+## C++ Profiler (could be used to profile ROS cpp executable under [ROS_ws]/devel/lib/[package_name]):
 $ sudo apt-get install valgrind kcachegrind graphviz
 $ valgrind --tool=callgrind [executable_name] [argument]
+$ valgrind --tool=cachegrind [executable_name] [argument]
 $ kcachegrind [callgrind.out.*****]
