@@ -17,7 +17,7 @@ def callback(img):
 
 def main():
     rospy.init_node('image_converter', anonymous=True)
-    sub = rospy.Subscriber('/zed/left/image_raw_color', Image, callback)
+    sub = rospy.Subscriber('raw_image_bridge', Image, callback)
     rospy.spin()
       
 if __name__=='__main__':

@@ -25,10 +25,10 @@ public:
     bool getLatestMessage(BusType* busPtr); // returns true iff message is new
 
 private:
-    boost::shared_ptr<ros::CallbackQueue>   _customCallbackQueuePtr;
     ros::Subscriber                         _subscriber;
     bool                                    _newMessageReceived;
     boost::shared_ptr<MsgType const>        _lastMsgPtr;
+    boost::shared_ptr<ros::CallbackQueue>   _customCallbackQueuePtr;
 };
 
 /**
@@ -53,14 +53,24 @@ void SimulinkSubscriber<MsgType,BusType>::subscriberCallback(const boost::shared
 template <class MsgType, class BusType>
 void SimulinkSubscriber<MsgType,BusType>::createSubscriber(std::string const& topic, uint32_t queueSize)
 {
+    
     _customCallbackQueuePtr.reset( new ros::CallbackQueue() );
-
+    
     ros::SubscribeOptions opts;
+    
     opts.init<MsgType>(topic, queueSize, 
         boost::bind(&SimulinkSubscriber<MsgType,BusType>::subscriberCallback, this, _1));
     opts.callback_queue = _customCallbackQueuePtr.get();
-
+    
+    
     _subscriber = SLROSNodePtr->subscribe(opts);
+    
+    //SLROSNodePtr->shutdown();
+    
+    
+    
+
+    
 }
 
 /** 

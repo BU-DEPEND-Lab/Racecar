@@ -4160,7 +4160,10 @@ void ros_image_filters_0706_step(void)
 void ros_image_filters_0706_initialize(void)
 {
   // Registration code
-
+ std::cout << "ros initialize" << std::endl;
+ 
+ std::cout << "3333333" << std::endl;
+ 
   // initialize non-finites
   rt_InitInfAndNaN(sizeof(real_T));
 
@@ -4207,7 +4210,16 @@ void ros_image_filters_0706_initialize(void)
     }
 
     tmp_3[13] = '\x00';
+    
+    
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
     Sub_ros_image_filters_0706_335.createSubscriber(tmp_3, MessageQueueLen);
+    
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
+    
+    
+    
 
     // End of Start for MATLABSystem: '<S16>/SourceBlock'
     // End of Start for SubSystem: '<Root>/Subscribe'
@@ -4440,6 +4452,7 @@ void ros_image_filters_0706_initialize(void)
     }
 
     tmp_2[15] = '\x00';
+    
     Pub_ros_image_filters_0706_588.createPublisher(tmp_2, MessageQueueLen);
 
     // End of Start for MATLABSystem: '<S43>/SinkBlock'
@@ -4506,6 +4519,7 @@ void ros_image_filters_0706_initialize(void)
 
     // End of SystemInitialize for SubSystem: '<Root>/Particle Initialization'
   }
+  
 }
 
 // Model terminate function

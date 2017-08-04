@@ -27,6 +27,9 @@
 #define UNUSED(x)                      x = x
 
 // Function prototype declaration
+
+int stepCounter = 20;
+
 void exitFcn(int sig);
 void *terminateTask(void *arg);
 void *baseRateTask(void *arg);
@@ -44,11 +47,19 @@ void *baseRateTask(void *arg)
   while (runModel) {
     sem_wait(&baserateTaskSem);
     ros_image_filters_0706_step();
-
     // Get model outputs here
     runModel = (rtmGetErrorStatus(rtM) == (NULL));
+    
+    
+    std::cout << stepCounter << std::endl;
+    
+    if ( 0 == --stepCounter )
+    {
+        std::cout << "exiting" << std::endl;
+        SLROSNodePtr->shutdown();
+        break;
+    }
   }
-
   runModel = 0;
   terminateTask(arg);
   pthread_exit((void *)0);
@@ -85,15 +96,18 @@ int main(int argc, char **argv)
   void slros_node_init(int argc, char** argv);
   slros_node_init(argc, argv);
   rtmSetErrorStatus(rtM, 0);
-
+  std::cout << "000" << std::endl;
   // Initialize model
   ros_image_filters_0706_initialize();
-
+  std::cout << "111" << std::endl;
   // Call RTOS Initialization function
   myRTOSInit(0.01, 0);
-
+  
+  
   // Wait for stop semaphore
   sem_wait(&stopSem);
+  
+  std::cout << "222" << std::endl;
   return 0;
 }
 

@@ -12,7 +12,7 @@ cap = cv2.VideoCapture(0)
 
 
 def sender():
-    pub = rospy.Publisher('image_bridge', Image, queue_size=1)
+    pub = rospy.Publisher('raw_image_bridge', Image, queue_size=1)
     rospy.init_node('image_sender', anonymous=True)
     rate = rospy.Rate(30)
     while not rospy.is_shutdown():
