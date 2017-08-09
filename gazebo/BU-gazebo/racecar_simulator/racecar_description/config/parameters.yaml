@@ -1,0 +1,6 @@
+IMU: {alwaysOn: 'True', gaussian_noise: 0.0, update_rate: 20.0}
+Lidar: {max_angle: 2.3561944902, min_angle: -2.3561944902, noise_mean: 0.0, noise_stddev: 0.03,
+  range_max: 10.0, range_min: 0.06, range_resolution: 0.01, resolution: 1, samples: 1080,
+  update_rate: 40.0, visualize: 'True'}
+Zed: {cam_controller_update_rate: 30.0, clip_far: 300, clip_near: 0.02, image_h: 480,
+  image_w: 640, noise_mean: 0.0, noise_stddev: 0.007, update_rate: 30.0}

@@ -30,6 +30,7 @@
   <node pkg="racecar_control" type="keyboard_teleop.py" name="keyboard_teleop" output="screen" launch-prefix="xterm -e"></node>
 
 
+  
   <!-- Allow for Gazebo to broadcast odom -->
   <node pkg="racecar_gazebo" name="gazebo_odometry_node" type="gazebo_odometry.py"/>
 

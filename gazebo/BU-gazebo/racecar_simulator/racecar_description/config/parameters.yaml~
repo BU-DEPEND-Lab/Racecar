@@ -1,4 +1,4 @@
-IMU: {alwaysOn: 'True', gaussian_noise: 0.0, update_rate: 20.0}
+IMU: {alwaysOn: 'False', gaussian_noise: 0.0, update_rate: 20.0}
 Lidar: {max_angle: 2.3561944902, min_angle: -2.3561944902, noise_mean: 0.0, noise_stddev: 0.03,
   range_max: 10.0, range_min: 0.06, range_resolution: 0.01, resolution: 1, samples: 1080,
   update_rate: 40.0, visualize: 'False'}
