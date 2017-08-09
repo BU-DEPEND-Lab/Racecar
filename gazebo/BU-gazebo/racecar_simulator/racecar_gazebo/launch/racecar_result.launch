@@ -5,7 +5,7 @@
   <arg name="run_camera" default="false"/>
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find racecar_gazebo)/worlds/$(arg world_name).world"/>
+    <arg name="world_name" value="/home/f1/f1tenth/gzbo2_generator/output/result.world"/>
     <arg name="gui" value="$(arg gui)"/>
   </include>
 
@@ -17,7 +17,7 @@
 
   <!-- odom_to_base_link 
   <node pkg="tf" type = "static_transform_publisher" name="odom_to_base_link" 
-    args="0 0 0 0 0 0 odom base_link 100" /> --> 
+    args="0 0 0 0 0 0 odom base_link 100" /> -->
 
   <!-- nav_to_base_link --> 
   <node pkg="tf" type = "static_transform_publisher" name="nav_to_base_link" 

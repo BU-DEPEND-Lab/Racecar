@@ -12,14 +12,14 @@ import rospy
 import tf
 
 # ROS messages
-from racecar_control.msg import drive_param
+from race.msg import drive_param
 from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import Float64MultiArray
 
 # published topics
 
 #em_pub = rospy.Publisher('eStop', Bool, queue_size=10)
-pub = rospy.Publisher('drive_parameters', drive_param, queue_size=1)
+pub = rospy.Publisher('drive_parameters', drive_param)
 
 #global variables
 global look_ahead_dist
@@ -31,15 +31,13 @@ global flag
 global planner_coord
 global path_y
 global path_x
+global speeds
 global look_ahead_dist
+global myrobot
 
 prev_steer = 0.
 prev_speed = 0.
-
 flag = 0
-
-
-look_ahead_dist = 1.0  # 1m look ahead distance
 
 
 '''create robot and initialize parameters'''
@@ -63,28 +61,25 @@ class robot:
         self.y = new_y
         self.yaw = new_yaw
 
-    def accelerate(self, rate):
-        self.speed += rate
-
-    def deccelerate(self, rate):
-        self.speed -= rate
-
+    def setSpeed(self, new_speed):
+        self.speed = new_speed
 
 """
 
 Read incoming data from path planner
 
-	>>> data" is a 1D array of x position, y position, speed, x position, y position , speed ... and so on.
+	>>> data is a 1D array of x position, y position, speed, x position, y position , speed ... and so on.
 
 	>>> note that speed is a percentage of max speed that is required
 
 """
-
+myrobot = robot()
 
 def desired_track(data):
     global flag
     global path_y
     global path_x
+    global speeds
     global planner_coord
 
     planner_coord = np.size(data.data) / 3  # number of coords
@@ -102,7 +97,14 @@ def desired_track(data):
     flag = 1
 
 
+
+
+
 """ Update pose data from hector_slam """
+
+def dist(x1, x2, y1, y2):
+    d = np.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+    return round(d, 2)
 
 
 def poseUpdate(data):
@@ -120,6 +122,17 @@ def poseUpdate(data):
     return x, y, yaw
 
 
+""" Set Look ahead distance """
+
+def look_ahead(curr_speed):
+    
+    if curr_speed < 2 :
+        look_ahead_dist = 1
+    if curr_speed > 2 and curr_speed < 10 :
+        look_ahead_dist = 1
+    if curr_speed > 10 :
+        look_ahead_dist = 1.5
+    return look_ahead_dist
 """ calculate desired steering angle """
 
 
@@ -127,16 +140,19 @@ def calculate_desired_steer(carrot_x, carrot_y, curr_x, curr_y, curr_yaw):
 
     delta_x = carrot_x - curr_x
     # l = look ahead distance from robot to carrot
+    print curr_x , curr_y, carrot_x, carrot_y
     l = np.sqrt((carrot_x - curr_x)**2 + (carrot_y - curr_y)**2)
+    #l = dist(carrot_x, curr_x, carrot_y, curr_y)
     print ("l = ", l)
 
     # subtract 1.56 because of rotated x, y axes....refer to report
-    theta = (np.arcsin(delta_x / l)) - 1.56
-
+    theta = -(np.arcsin(delta_x / l))+1.56
+    #theta = +(np.arcsin(delta_x / l))-1.56
     print ("theta = ", theta)
     print ("curr_yaw = ", curr_yaw)
 
     desired_steer = curr_yaw - theta
+
     return desired_steer
 
 
@@ -147,12 +163,15 @@ def PD_controller(desired_steer, diff_error):
     kp = 1
     kd = 0.09
 
-    steerOutput = - (kp * desired_steer) - (kd * diff_error)
-
-    if steerOutput < -0.4:
-        steerOutput = -0.4
-    elif steerOutput > 0.4:
-        steerOutput = 0.4
+    steerOutput =  -(kp * desired_steer) - (kd * diff_error)
+    if((steerOutput < 0.1) and (steerOutput > 0.)):
+	steerOutput = 0.1
+    elif((steerOutput > -0.1) and (steerOutput < 0.)):
+        steerOutput = -0.1
+    elif steerOutput < -0.5:
+        steerOutput = -0.5
+    elif steerOutput > 0.5:
+        steerOutput = 0.5
 
     return steerOutput
 
@@ -161,17 +180,17 @@ def PD_controller(desired_steer, diff_error):
 
 
 def speedControl(speed_percentage, prev_speed):
-    max_speed = 40
-    max_speed_reverse = -40
-    min_speed = 0
+    max_speed = 1
+    max_speed_reverse = -1
+    stop = 0
 
     desired_speed = speed_percentage * max_speed
 
     speed = 0.9 * prev_speed + 0.1 * desired_speed
 
-    if speed < -max_speed_reverse:
+    if speed < -max_speed_reverse and speed < stop:
         speed = -max_speed_reverse
-    elif speed > max_speed:
+    elif speed > max_speed and speed > stop:
         speed = max_speed
 
     return speed
@@ -181,8 +200,10 @@ def speedControl(speed_percentage, prev_speed):
 
 
 def goalCheck(goal_x, goal_y, curr_x, curr_y):
-    goalRadius = np.sqrt((goal_x - curr_x)**2 + (goal_y - curr_y)**2)
-    if goalRadius < 0.5:
+    #goalRadius = np.sqrt((goal_x - curr_x)**2 + (goal_y - curr_y)**2)
+    goalRadius = dist(goal_x, curr_x, goal_y, curr_y)
+    print goalRadius
+    if goalRadius < 2.0:  # goalRadius > look_ahead_distance. If a smaller gaolRadius is requried, a new condition needs to be added
         return True
     else:
         return False
@@ -201,38 +222,72 @@ def control(data):
     global planner_coord
     global path_y
     global path_x
+    global speeds
     global look_ahead_dist
+    global myrobot
 
-    myrobot = robot()
 
-    """ Flag is set when path arrives from planner node"""
-    while flag == 1:
-        # Update pose
-        curr_x, curr_y, yaw = poseUpdate(data)
-        myrobot.setPose(curr_x, curr_y, yaw)
+    """ Flag is set when path and speed values arrive from planner node"""
+    # Update pose
+    curr_x, curr_y, yaw = poseUpdate(data)
+    myrobot.setPose(curr_x, curr_y, yaw)
+
+    if flag == 1:
 
         goal_x = path_x[planner_coord - 1]
         goal_y = path_y[planner_coord - 1]
-        goal_speed = speed[planner_coord - 1]
 
         if goalCheck(goal_x, goal_y, myrobot.x, myrobot.y):
             flag = 0
-            angle = 0.
-            speed = 0.
+            msg.angle = 0.
+            msg.velocity = -2.0
+            
             print ("GOAL REACHED")
             pub.publish(msg)
-            break
+            exit(0)
+
+        # Set look ahead distance ######################################
+        look_ahead_dist = look_ahead(myrobot.speed)
+        print "Look Ahead = ",look_ahead_dist,"myrobot.speed = ", myrobot.speed
+
+
+        # find starting point along the path --> closest point on the path
+
+        
+        startingPoints = [0.] * planner_coord
+        for i in range(0, planner_coord):  
+            d = dist(path_x[i], myrobot.x, path_y[i], myrobot.y)
+            startingPoints[i] = round(d, 2)
+        #    print ("startingPoints", i, " = ", startingPoints[i])    
+
+               
+        closest_point = min(startingPoints)        
+        startIndex = startingPoints.index(closest_point)
+        print ("startIndex = ", startIndex)            
+
 
         # Find carrot point on path
-        possible_l = [0] * planner_coord
+        possible_l = [0.] * planner_coord
+        for i in range(startIndex, planner_coord):
+            d = dist(path_x[i], myrobot.x, path_y[i], myrobot.y)
+            difference = abs(d-look_ahead_dist)
+            possible_l[i] = round(difference, 2)
+
+        l_carrot = (min(possible_l[startIndex:]))
+        print ("l_carrot = ", l_carrot)    
+
         for i in range(0, planner_coord):
-            possible_l[i] = abs((path_x[i] - myrobot.x)**2 +
-                                (path_y[i] - myrobot.y)**2 - look_ahead_dist)
+            if i < startIndex:
+                continue
+            elif i >= startIndex:
+                if possible_l[i] == l_carrot:
+                   carrotIndex = i 
+                   break
 
-        j = possible_l.index(min(possible_l))
+        print("carrotIndex = ", carrotIndex)  
 
-        carrot_x = path_x[j]
-        carrot_y = path_y[j]
+        carrot_x = path_x[carrotIndex]
+        carrot_y = path_y[carrotIndex]
         print ("carrot_x = ", carrot_x, "carrot_y = ", carrot_y)
 
         # Find desired steer value
@@ -241,7 +296,7 @@ def control(data):
             carrot_y,
             myrobot.x,
             myrobot.y,
-            myrobot.yaw)
+            -myrobot.yaw)  # TEST IF NEGATION IS NEEDED IN GAZEBO
         print ("desired_steer = ", desired_steer)
 
         # Calculate steering output to publish using pd controller
@@ -250,30 +305,44 @@ def control(data):
         steerOutput = PD_controller(desired_steer, diff_error)
         prev_steer = steerOutput
 
-        steerOutput = -desired_steer
-
         # Speed control
-        speed_percentage = speed[j]  # carrot speed
-        speed = speedControl(speed_percentage[j], prev_speed)
+        speed = speedControl(speeds[carrotIndex], prev_speed)
         prev_speed = speed
+        myrobot.speed = speed
 
         # Publish message
         msg.angle = steerOutput
         msg.velocity = speed
-        print("flag = 1, vel = ", msg.speed, ", angle = ", msg.angle)
+        print("flag = 1, vel = ", msg.velocity, ", angle = ", msg.angle)
         pub.publish(msg)
-        flag = 0
+  
+    # if flag = 0
+    angle = 0.
+    speed = 0.
+    msg.angle = angle
+    msg.velocity = speed
+    #pub.publish(msg)
+    # rospy.Rate(10)
 
-    # keep speed and steering to 0 if no plan arrives and flag is not set
-    curr_x, curr_y, yaw = poseUpdate(data)
-    myrobot.setPose(curr_x, curr_y, yaw)
-
+def myhook():
+    msg = drive_param()
+    angle = 0.
+    speed = -1.0
+    msg.angle = angle
+    msg.velocity = speed
+    pub.publish(msg)
+    msg = drive_param()
     angle = 0.
     speed = 0.
     msg.angle = angle
     msg.velocity = speed
     pub.publish(msg)
-    # rospy.Rate(10)
+    msg = drive_param()
+    angle = 0.
+    speed = 0.
+    msg.angle = angle
+    msg.velocity = speed
+    pub.publish(msg)
 
 
 if __name__ == "__main__":
@@ -283,15 +352,8 @@ if __name__ == "__main__":
         Float64MultiArray,
         desired_track)
     rospy.Subscriber("slam_out_pose", PoseStamped, control)
-
+    rospy.on_shutdown(myhook)
     rospy.spin()
 
 
-'''
 
-def emergencyStop():
-	t_end = time.time() + 5
-	while time.time() < t_end:
-		#do whatever you want to do
-	em_pub.publish(True) # find a way to manually chage to false
-'''

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-from racecar_control.msg import drive_param
+from race.msg import drive_param
 import curses
 
 forward = 0;

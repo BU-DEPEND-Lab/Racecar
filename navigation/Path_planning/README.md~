@@ -8,7 +8,7 @@ $ roslaunch hector_slam_launch tutorial.launch
 
 2) run path planner node and enter start and stop coordinates when prompted. Note that the starting point(origin) of the robot is 1024, 1024.
 
-$ rosrun race rrt_planner.py or PathPlanning.py
+$ rosrun race rrt_planner.py
 
 3) Drive the car manually to build a map using either the joystick node or keyboard node. Both can be launched with the launch file in step 1.
 
