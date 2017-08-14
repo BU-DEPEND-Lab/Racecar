@@ -1,0 +1,7 @@
+<launch>
+
+	<arg name="xml_path" value="$(find stopsign_detection)/data/stopsign_detector.xml" />
+	<arg name="display" value="1" />
+
+	<node name="stopsign_detection" pkg="stopsign_detection" type="stopsign_detection_node" output="screen" args="$(arg xml_path) $(arg display)" />
+</launch>
