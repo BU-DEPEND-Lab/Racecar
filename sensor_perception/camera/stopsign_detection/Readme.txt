@@ -21,3 +21,12 @@ $ roslaunch stopsign_detection stopsign_detection.launch
   <arg name="display" value="1" />
   Display off:
   <arg name="display" value="0" />
+ 
+## Topics ##
+
+/stop_sign_distance   <std_msgs::Int32>    
+    msg.data -> stop sign distance represented in cm. -1 represents no stop sign detected
+
+/stop_sign_bd_box     <geometry_msgs::Point>    
+    msg.x, msg.y -> bounding box coordinate 
+    msg.z -> bounding box width(height), 0 represents no stop sign detected
