@@ -213,7 +213,7 @@ def goalCheck(goal_x, goal_y, curr_x, curr_y):
 
 """ Camera Input """
 
-def Camera(data):
+def camera(data):
 	global STOP_Dist
 	STOP_Dist = data
 
@@ -256,7 +256,7 @@ def control(data):
             pub.publish(msg)
             exit(0)
             
-		if ((STOP_Dist!= -1) && (STOP_Dist <150)):
+	if ((STOP_Dist!= -1) and (STOP_Dist <150)):
             flag = 0
             msg.angle = 0.
             msg.velocity = 0.0
