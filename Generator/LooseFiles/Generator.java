@@ -6,7 +6,7 @@ import java.net.URISyntaxException;
 import java.awt.image.*;
 import javax.imageio.ImageIO;;
 
-public class Generator1 {
+public class Generator {
 	
 	public static Scanner top;
 	public static Scanner bot;
