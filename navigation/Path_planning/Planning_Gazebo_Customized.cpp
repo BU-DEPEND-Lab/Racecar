@@ -43,13 +43,13 @@ Mat img;
 vector<vector<int>> nei;
 string mappath = homedir + "/catkin_ws/src/gzbo2_generator/output/map.png";
 
-//////////////////////////////////////////////////////////////////////////////////
-// Name : read_coord	                                                        //
-// Return type : void	                                                        //
-// Parameters : int &, int &						                            //
-// Function : Reads the coordinates from the file coord.txt					 	//
-// Return : N/A  																//
-//////////////////////////////////////////////////////////////////////////////////	
+////////////////////////////////////////////////////////////////////////////////
+// Name : read_coord	                                                        
+// Return type : void	                                                        
+// Parameters : int &, int &						                            
+// Function : Reads the coordinates from the file coord.txt					 	
+// Return : N/A  																
+////////////////////////////////////////////////////////////////////////////////	
 void read_coord(int &x, int &y) {
 	string line;
 	int i = 0;
@@ -88,13 +88,13 @@ void read_coord(int &x, int &y) {
 	myfile.close();
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-// Name : read_map		                                                        //
-// Return type : void	                                                        //
-// Parameters : void						            		                //
-// Function : Reads the map from the file map.png							 	//
-// Return : N/A  																//
-//////////////////////////////////////////////////////////////////////////////////	
+////////////////////////////////////////////////////////////////////////////////
+// Name : read_map		                                                        
+// Return type : void	                                                        
+// Parameters : void						            		                
+// Function : Reads the map from the file map.png							 	
+// Return : N/A  																
+////////////////////////////////////////////////////////////////////////////////	
 void read_map() {
 	img = imread(mappath.c_str(), 0);
 //	imshow( "Display window", img );   // Show our image inside it.
@@ -108,19 +108,19 @@ void read_map() {
 }
   	
 
-//////////////////////////////////////////////////////////////////////////////////
-//                          Function Definition									//
-//   Name  - Neighbors                                                          //
-//   Function  - Finds the neighboring points around a given point in a grid.	//
-//               Depending on the requirement, it is used for finding all the 	//
-//               points between the high and low x, y distance. And it is also 	//
-//               used to find a points for the search step. For 3, returns		//
-//               every 10th neighbor to prevent over-crowding of branches.		//
-//   Arguments  - ch -> 1(low 3 and high 4) - Check if Valid move,				//
-//                     2(low 1 and high 2) - Check for noise					//
-//                     3(low 20 and high 21) - Only consider perimeter for jump	//
-//                ptx, pty -> point of reference								//
-//////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+//                          Function Definition									
+//   Name  - Neighbors                                                          
+//   Function  - Finds the neighboring points around a given point in a grid.	
+//               Depending on the requirement, it is used for finding all the 	
+//               points between the high and low x, y distance. And it is also 	
+//               used to find a points for the search step. For 3, returns		
+//               every 10th neighbor to prevent over-crowding of branches.		
+//   Arguments  - ch -> 1(low 3 and high 4) - Check if Valid move,				
+//                     2(low 1 and high 2) - Check for noise					
+//                     3(low 20 and high 21) - Only consider perimeter for jump	
+//                ptx, pty -> point of reference								
+////////////////////////////////////////////////////////////////////////////////
 
 	
 int Neighbors(int ch , int ptx, int pty) {
@@ -167,14 +167,14 @@ int Neighbors(int ch , int ptx, int pty) {
 	return 0;
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-//                          Function Definition									//
-//   Name  - ExtendStarStopt													//
-//   Function  - Extend the walls in the map to give enough moving room for the //
-//               Search algorithm. Done because Gazebo gives coordinates of		//
-//               Start and Stop right next to the walls 						//
-//   Arguments  - N/A 															//
-//////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+//                          Function Definition									
+//   Name  - ExtendStarStopt													
+//   Function  - Extend the walls in the map to give enough moving room for the 
+//               Search algorithm. Done because Gazebo gives coordinates of		
+//               Start and Stop right next to the walls 						
+//   Arguments  - N/A 															
+////////////////////////////////////////////////////////////////////////////////
 
 void ExtendStartStop() {
     cout << "Extending start ..." << endl;
@@ -188,12 +188,12 @@ void ExtendStartStop() {
 }
 
 
-//////////////////////////////////////////////////////////////////////////////////
-//                          Function Definition									//
-//   Name  - ang 																//
-//   Function  - Used to find angle between two lines 							//
-//   Arguments  - lineA, lineB 													//
-//////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+//                          Function Definition									
+//   Name  - ang 																
+//   Function  - Used to find angle between two lines 							
+//   Arguments  - lineA, lineB 													
+////////////////////////////////////////////////////////////////////////////////
 
 double ang(vector<vector<int>> lineA, vector<vector<int>> lineB){
     // Get nicer vector form
@@ -223,13 +223,13 @@ double ang(vector<vector<int>> lineA, vector<vector<int>> lineB){
     return ang_deg;
 }
 
-//////////////////////////////////////////////////////////////////////////////////	
-//                          Function Definition 								//
-//   Name  - get_line															//
-//   Function  - Returns all the points in a grid that fall between two given	//
-//               referrence points. 											//
-//   Arguments  - x1, y1 -> (pt1), x2, y2 -> (pt2) 								//
-//////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////	
+//                          Function Definition 								
+//   Name  - get_line															
+//   Function  - Returns all the points in a grid that fall between two given	
+//               referrence points. 											
+//   Arguments  - x1, y1 -> (pt1), x2, y2 -> (pt2) 								
+////////////////////////////////////////////////////////////////////////////////
 
 vector<vector<int>> get_line(int x1, int y1, int x2, int y2){
 
@@ -306,16 +306,16 @@ vector<vector<int>> get_line(int x1, int y1, int x2, int y2){
 	return line;
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-//                          Function Definition									//
-//   Name  - CheckValid															//
-//   Function  - Checks if a move is valid between two given referrence points.	//
-//               The condition is that the two points should not be non movable //
-//               points and every point between the two should have a buffer 	//
-//               from the wall. The buffer if found using Neighbors with x = 1.	//
-//               Returns 1 for valid move, and 0 for invalid move.				//
-//   Arguments  - pt1, pt2														//
-//////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+//                          Function Definition									
+//   Name  - CheckValid															
+//   Function  - Checks if a move is valid between two given referrence points.	
+//               The condition is that the two points should not be non movable 
+//               points and every point between the two should have a buffer 	
+//               from the wall. The buffer if found using Neighbors with x = 1.	
+//               Returns 1 for valid move, and 0 for invalid move.				
+//   Arguments  - pt1, pt2														
+////////////////////////////////////////////////////////////////////////////////
 int CheckValid(vector<int> pt1, vector<int> pt2){
 	vector<vector<int>> gline;
 	gline = get_line(pt1[0],pt1[1],pt2[0],pt2[1]);
@@ -332,16 +332,16 @@ int CheckValid(vector<int> pt1, vector<int> pt2){
     return 1;
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-//                          Function Definition									//
-//   Name  - CheckDirect														//
-//   Function  - This function check if a point from one tree has a direct line //
-//               of sight move to any branch of the other tree. This is done to //
-//               curb run time, and prevent wastage of search if a direct path 	//
-//               is already visible.   											//
-//   Arguments  - pt(point of referrence), dict(Dictionary of the branches of	//
-//                the other tree.)												//
-//////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+//                          Function Definition									
+//   Name  - CheckDirect														
+//   Function  - This function check if a point from one tree has a direct line 
+//               of sight move to any branch of the other tree. This is done to 
+//               curb run time, and prevent wastage of search if a direct path 	
+//               is already visible.   											
+//   Arguments  - pt(point of referrence), dict(Dictionary of the branches of	
+//                the other tree.)												
+////////////////////////////////////////////////////////////////////////////////
     
 int CheckDirect(vector<int> pt, map<pair<int,int>, vector<vector<int>>> dict){
 	for (std::map<pair<int,int>, vector<vector<int>>>::iterator it=dict.begin(); it!=dict.end(); ++it)        
@@ -350,13 +350,13 @@ int CheckDirect(vector<int> pt, map<pair<int,int>, vector<vector<int>>> dict){
     return 0;
 }
 
-//////////////////////////////////////////////////////////////////////////////////
-//                          Function Definition									//
-//   Name  - CutNeighbors														//
-//   Function  - Returns Valid movable points from neighbors   					//
-//   Arguments  - pt(point of referrence), Dict(Dictionary of the branches of	//
-//                the other tree.)												//
-//////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+//                          Function Definition									
+//   Name  - CutNeighbors														
+//   Function  - Returns Valid movable points from neighbors   					
+//   Arguments  - pt(point of referrence), Dict(Dictionary of the branches of	
+//                the other tree.)												
+////////////////////////////////////////////////////////////////////////////////
     
 vector<vector<int>> CutNeighbors(pos, sD, ap):
     nv = []
