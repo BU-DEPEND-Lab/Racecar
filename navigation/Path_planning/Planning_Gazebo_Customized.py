@@ -1,16 +1,19 @@
 #!/usr/bin/env python
 
 import random
-import matplotlib.pyplot as plt 
+from numpy import dot
 import numpy as np
 import copy
 import collections
 import math
 import time
-#from std_msgs.msg import Float64MultiArray
-#import rospy
+from std_msgs.msg import Float64MultiArray
+import rospy
 from PIL import Image
-coordpath = "/home/a/Desktop/f1/Gazebo2_Generator-master/output/coord.txt"
+from os.path import expanduser
+
+home = expanduser("~")
+coordpath = home+"/catkin_ws/src/gzbo2_generator/output/coord.txt"
 cc = open(coordpath)
 ccstr = cc.read()
 ccstr = ccstr[ccstr.index("2048"):-1]
@@ -24,21 +27,9 @@ obs = 0
 wal = 150
 walhigh = 3
 wallow = 2
-path = "/home/a/Desktop/f1/Gazebo2_Generator-master/output/map.png"
+path = home+"/catkin_ws/src/gzbo2_generator/output/map.png"
 
-a = np.array(Image.open(path).convert('L'))
 
-X = len(a)-1
-Y = len(a[0])-1
-
-#RemoveNoise()
-#ExtendWall()
-#for rep in range(2):
-#    a = np.rot90(a) # First remove excess columns and then Excess Rows
-#    b = len(a)
-#    for line in range(b):
-#        if(np.count_nonzero(a[b-line-1]) < 1):
-#            a = np.delete(a,b-line-1,0)
 
 ###############################################################################
 #                          Function Definition
@@ -110,15 +101,6 @@ def ExtendStartStop():
     for i in n:
         a[i[0]][i[1]] = mvp
         
-
-a = np.rot90(a,3)
-a = np.fliplr(a)
-plt.scatter((start[1],stop[1]),(start[0],stop[0]), s = 20, c = 'r')
-plt.imshow(a)
-plt.show()
-ExtendStartStop()
-
-
 ###############################################################################
 #                          Function Definition
 #   Name  - ang
@@ -247,104 +229,7 @@ def CutNeighbors(Nei, pos, sD, ap):
         (nc not in sD))):
            nv.append(nc) 
     return nv
-    
 
-""" Variable declerations for the Search tree that will begin from START """
-SetTrees = collections.defaultdict(list)
-SetTrees[str(start)].append(start)
-pos = str(start)
-SetDismissed = []
-n =  Neighbors(3,(start[0],start[1]))
-AnglePrevRef = (start[0]-1, start[1]-1)
-
-""" Variable declerations for the Search tree that will begin from STOP """    
-SetTreesopp = collections.defaultdict(list)
-SetTreesopp[str(stop)].append(stop)
-SetLines = []
-posopp = str(stop)
-SetDismissed = []
-nopp = Neighbors(3,(stop[0],stop[1]))
-AnglePrevRefopp = start
-prepre = start
-
-""" Variable Declaration for The final path """
-LineFinal = []
-LineFinal2 = []
-GoalFlag = 0
-LineFinal.append(start)
-LineFinal2.append(stop)  
-""" Check if there is a direct path from START to STOP """
-st_line = 0
-if CheckValid(start,stop) == 1:
-    GoalFlag = 1
-    LineFinal.append(start)
-    LineFinal2.append(stop)    
-    plt.imshow(a, extent=[0, np.shape(a)[1], np.shape(a)[0],0])
-    plt.plot([start[1],stop[1]],[start[0],stop[0]],color = 'blue')
-    plt.show()
-    st_line = 1
-
-while GoalFlag != 1:
-    finStep = 0
-    while finStep == 0:
-        nv = CutNeighbors(n,pos,SetDismissed, AnglePrevRef)
-        if len(nv) == 0:
-            nf = 1
-        else:
-            nf = 0
-            nc = random.choice(nv)
-#            print ang((AnglePrevRef,eval(pos)),(eval(pos),nc))
-        if nf == 1:
-            print nv
-#            print "nf reached at ", pos
-            print "nf ",pos, AnglePrevRef
-            pos = str(SetTrees[str((AnglePrevRef[0],AnglePrevRef[1]))][-2])
-            AnglePrevRef = SetTrees[str((AnglePrevRef[0],AnglePrevRef[1]))][-3]
-            print "rebound ",pos, AnglePrevRef
-
-
-        else:
-            prepre = AnglePrevRef
-            SetDismissed.append(nc)
-            ret = CheckDirect(nc , SetTreesopp) # Check for direct line of sight
-#            print "pos = ", pos, " nc = ", nc
-            AnglePrevRef = eval(pos)        
-            if (ret != 0): # There is direct line of sight
-                print "Found Goal"
-                GoalFlag = 1
-                finStep = 1
-                """ Add point and line of sight branch to tree """
-                SetLines.append([ret,nc])
-    #                print p
-                SetTrees[str(nc)] = copy.deepcopy(SetTrees[pos])
-                SetTrees[str(nc)].append(nc)
-                
-                """ Show final tree from START """
-                plt.imshow(a, extent=[0, np.shape(a)[1], np.shape(a)[0],0])
-                prev = copy.deepcopy(start)
-                for line in SetTrees[str(nc)]:
-                    LineFinal.append(line)
-                    plt.plot([line[1],prev[1]],[line[0],prev[0]],color = 'blue')
-                    prev = copy.deepcopy(line)
-                prev = copy.deepcopy(stop)
-
-            else: # There is no direct line of sight
-                
-                """ Add point to as a branch to START tree """
-                SetTrees[str(nc)] = copy.deepcopy(SetTrees[pos])
-    #                print p
-                SetTrees[str(nc)].append(nc)
-                SetLines.append([eval(pos),nc])
-                
-                """ Choose next branch at random to search from """
-                pos = str(nc)
-            n = Neighbors(3,(eval(pos)[0],eval(pos)[1]))
-            plt.imshow(a, extent=[0, np.shape(a)[1], np.shape(a)[0],0])
-            plt.scatter(nc[1],nc[0], s = 20, c = 'b')
-            for line in SetLines:
-                plt.plot([line[0][1],line[1][1]],[line[0][0],line[1][0]],color = 'green')
-            plt.show()
-            print "Searching ... " # To enable auto scroll in iPython
 ###############################################################################
 #                          Function Definition
 #   Name  - LineOptimization
@@ -396,54 +281,6 @@ def LineComp(Line):
     for pt in range(len(Line)-1):
         NewLine+=get_line(Line[pt][0],Line[pt][1],Line[pt+1][0],Line[pt+1][1])
     return NewLine
-
-
-#def CurveSmoothing(Line):
-    
-            
-""" Function calls for Final-Processing of Final Path """
-
-""" Convert the two branches from START and STOP into one """
-LineFinal2.reverse() # Reverse the final path from STOP tree
-LineFinal+=LineFinal2 # Combine into one path
-
-""" Try processing multiple times to see different results """
-start_time5 = time.time()
-LF1 = LineComp(LineFinal)
-if not st_line: 
-    print " Starting Optimization"    
-    plt.imshow(a, extent=[0, np.shape(a)[1], np.shape(a)[0],0])
-    prev = copy.deepcopy(LF1[0])
-    for line in LF1:
-        plt.plot([line[1],prev[1]],[line[0],prev[0]],color = 'blue')
-        prev = copy.deepcopy(line)
-    plt.show()
-    print "Map - without optimization"
-    LF1 = LineComp(LF1)
-    LF2 = LineOptimization(LF1)
-    plt.imshow(a, extent=[0, np.shape(a)[1], np.shape(a)[0],0])
-    prev = copy.deepcopy(LF2[0])
-    for line in LF2:
-        plt.plot([line[1],prev[1]],[line[0],prev[0]],color = 'blue')
-        prev = copy.deepcopy(line)
-    plt.show()    
-    print "Map - first optimization"
-    LF2 = LineComp(LF2)
-    LF = LineOptimization(LF2)
-
-else:
-    LF = LF1
-stop_time5 = time.time()
-time5 = stop_time5 - start_time5
-
-""" Show final Line """
-plt.imshow(a, extent=[0, np.shape(a)[1], np.shape(a)[0],0])
-prev = copy.deepcopy(LF[0])
-for line in LF:
-    plt.plot([line[1],prev[1]],[line[0],prev[0]],color = 'blue')
-    prev = copy.deepcopy(line)
-plt.show()
-print "Map - Final Path"
     
 ######################## Velocity Vector Calculations #########################
 
@@ -509,13 +346,151 @@ def SpeedList(Line, angleList):
 
     for pt2 in range(20):
         speedlist[str(pt2+pt)] = int(100 - (100.0*(pt2/19.0)))
+    speedlist[len(speedlist)] = 0.0
     return speedlist
 
+rospy.init_node('Path_planner', anonymous=True)
+pub = rospy.Publisher('path_planner',Float64MultiArray , queue_size=10)  
+a = np.array(Image.open(path).convert('L'))
+X = len(a)-1
+Y = len(a[0])-1
+#RemoveNoise()
+#ExtendWall()
+#for rep in range(2):
+#    a = np.rot90(a) # First remove excess columns and then Excess Rows
+#    b = len(a)
+#    for line in range(b):
+#        if(np.count_nonzero(a[b-line-1]) < 1):
+#            a = np.delete(a,b-line-1,0)
+a = np.rot90(a,3)
+a = np.fliplr(a)
+ExtendStartStop()
+ErrorFree = 0
+while ErrorFree == 0:
+    try:
+        """ Variable declerations for the Search tree that will begin from START """
+        SetTrees = collections.defaultdict(list)
+        SetTrees[str(start)].append(start)
+        pos = str(start)
+        SetDismissed = []
+        n =  Neighbors(3,(start[0],start[1]))
+        AnglePrevRef = (start[0]-1, start[1]-1)
+
+        """ Variable declerations for the Search tree that will begin from STOP """    
+        SetTreesopp = collections.defaultdict(list)
+        SetTreesopp[str(stop)].append(stop)
+        posopp = str(stop)
+        nopp = Neighbors(3,(stop[0],stop[1]))
+        AnglePrevRefopp = start
+        prepre = start
+
+        """ Variable Declaration for The final path """
+        LineFinal = []
+        LineFinal2 = []
+        GoalFlag = 0
+        LineFinal.append(start)
+        LineFinal2.append(stop)  
+
+        """ Check if there is a direct path from START to STOP """
+        st_line = 0
+        if CheckValid(start,stop) == 1:
+            GoalFlag = 1
+            st_line = 1
+        search_start = time.time()
+        while GoalFlag != 1:
+            finStep = 0
+            while finStep == 0:
+                nv = CutNeighbors(n,pos,SetDismissed, AnglePrevRef)
+                if len(nv) == 0:
+                    nf = 1
+                else:
+                    nf = 0
+                    nc = random.choice(nv)
+        #            print ang((AnglePrevRef,eval(pos)),(eval(pos),nc))
+                if nf == 1:
+                    #print nv
+        #            print "nf reached at ", pos
+                    #print "nf ",pos, AnglePrevRef
+                    pos = str(SetTrees[str((AnglePrevRef[0],AnglePrevRef[1]))][-2])
+                    AnglePrevRef = SetTrees[str((AnglePrevRef[0],AnglePrevRef[1]))][-3]
+                    #print "rebound ",pos, AnglePrevRef
+
+
+                else:
+                    print "[",time.time() - search_start,"] : ","Searching ... " # To enable auto scroll in iPython
+                    prepre = AnglePrevRef
+                    SetDismissed.append(nc)
+                    ret = CheckDirect(nc , SetTreesopp) # Check for direct line of sight
+        #            print "pos = ", pos, " nc = ", nc
+                    AnglePrevRef = eval(pos)        
+                    if (ret != 0): # There is direct line of sight
+                        print "Found Goal"
+                        GoalFlag = 1
+                        finStep = 1
+                        """ Add point and line of sight branch to tree """
+            #                print p
+                        SetTrees[str(nc)] = copy.deepcopy(SetTrees[pos])
+                        SetTrees[str(nc)].append(nc)
+                        
+                        """ Show final tree from START """
+                        for line in SetTrees[str(nc)]:
+                            LineFinal.append(line)
+
+                    else: # There is no direct line of sight
+                        
+                        """ Add point to as a branch to START tree """
+                        SetTrees[str(nc)] = copy.deepcopy(SetTrees[pos])
+            #                print p
+                        SetTrees[str(nc)].append(nc)
+                        """ Choose next branch at random to search from """
+                        pos = str(nc)
+                    n = Neighbors(3,(eval(pos)[0],eval(pos)[1]))    
+        ErrorFree = 1
+    except IndexError:
+        print "Caught Index Error"
+        ErrorFree = 0           
+""" Function calls for Final-Processing of Final Path """
+
+""" Convert the two branches from START and STOP into one """
+LineFinal2.reverse() # Reverse the final path from STOP tree
+LineFinal+=LineFinal2 # Combine into one path
+
+""" Try processing multiple times to see different results """
+start_time5 = time.time()
+LF1 = LineComp(LineFinal)
+if not st_line: 
+    print " Starting Optimization"    
+    print "Map - without optimization"
+    LF1 = LineComp(LF1)
+    LF2 = LineOptimization(LF1)
+    print "Map - first optimization"
+    LF2 = LineComp(LF2)
+    LF = LineOptimization(LF2)
+
+else:
+    LF = LF1
+stop_time5 = time.time()
+time5 = stop_time5 - start_time5
+
 angs = AngleDef(LF)
-SF = LineComp(LF)
+SF = np.array(LineComp(LF))
+SF = SF.astype(float)
+#print "SSSSSSFFFFFF = ", SF
 speeds = SpeedList(SF,angs)
-#for key in speeds.keys():
-#    print key, speeds[key]
+#print "SPEEEEEEDDDDDSSSS = ",speeds
+arr = Float64MultiArray()
+setsend = [[0,0,100]for ii in range(len(SF))]
+for i in range(len(SF)-1):
+    for k in range(2):
+        SF[i][k] -= 1024.0
+        SF[i][k] /= scale
+for i in range(len(SF)-1):
+    setsend[i] = [SF[i][0],SF[i][1],speeds[str(i)]]
+arr.data = np.ndarray.flatten(np.array(setsend)).tolist() 
+print "Path Sent"
+
+#print "ARRRRRRRRRRRRRRRRR = ", arr
+pub.publish(arr)
 
 
 
