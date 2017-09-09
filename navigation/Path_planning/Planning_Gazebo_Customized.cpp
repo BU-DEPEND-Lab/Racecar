@@ -26,6 +26,7 @@ using namespace cv;
 struct passwd *pw = getpwuid(getuid());
 const string homedir = pw->pw_dir;
 string coordpath = homedir + "/catkin_ws/src/gzbo2_generator/output/coord.txt";
+string outpath = homedir + "/catkin_ws/src/race/src/path.txt";
 vector<int> start = {(1024), (1024)};
 vector<int> stop = {(0), (0)};
 uint8_t m [2048][2048];
@@ -43,6 +44,12 @@ int wallow = 2;
 Mat img;
 vector<vector<int>> nei;
 string mappath = homedir + "/catkin_ws/src/gzbo2_generator/output/map.png";
+
+struct idmap
+{
+	int pos;
+	double Value;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Name : read_coord	                                                        
@@ -74,6 +81,7 @@ void read_coord(int &x, int &y) {
 	if(neg_flag)
 		x *= -1;
 	i+=2;
+	neg_flag = 0;
 	while(line[i]) {
 		if(line[i] == '-') {
 			neg_flag = -1;
@@ -97,14 +105,31 @@ void read_coord(int &x, int &y) {
 ////////////////////////////////////////////////////////////////////////////////	
 void read_map() {
 	img = imread(mappath.c_str(), 0);
-	//imshow( "Display window", img );   // Show our image inside it.
-    //waitKey(0);
 	img.convertTo(img, CV_8U);
     for(int i = 0; i<2048;i++){
     	for(int j = 0; j<2048; j++){
     		m[i][j] = (int)img.at<uint8_t>(i,j);
     	}
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+//                          Function Definition
+//   Name  - DisplayPath
+//   Function  - used to diaply path if necessary
+//   Arguments  - vector<vector<int>> Line
+/////////////////////////////////////////////////////////////////////////////////
+
+void DisplayPath(vector<vector<int>> path) {
+		for (int i = 0; i < path.size(); i ++){
+			m[path[i][0]][path[i][1]] = 150;
+		}
+		Mat dataMatrix1(2048,2048,CV_8UC1, m);
+		imshow( "Display window", dataMatrix1 );   // Show our image inside it.
+    	waitKey(-1); 
+    	for (int i = 0; i < path.size(); i ++){
+			m[path[i][0]][path[i][1]] = 255;
+		}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -162,6 +187,7 @@ void fliplr() {
 
 	
 int Neighbors(int ch , int ptx, int pty) {
+	nei.clear();
 	int low, high;
     if (ch == 1) {
 	    low = 4;
@@ -215,13 +241,13 @@ int Neighbors(int ch , int ptx, int pty) {
 
 void ExtendStartStop() {
     cout << "Extending start ..." << endl;
-    if(Neighbors(2,start[0],start[1]))
-    	for( int i = 0; i<nei.size(); i++)
-        	m[nei[i][0]][nei[i][1]] = mvp;
-
- 	if(Neighbors(2,stop[0],stop[1]))
-    	for( int i = 0; i<nei.size(); i++)
-        	m[nei[i][0]][nei[i][1]] = mvp;
+    Neighbors(2,start[0],start[1]);
+    for( int i = 0; i<nei.size(); i++)
+       	m[nei[i][0]][nei[i][1]] = mvp;
+    cout << "Extending stop ..." << endl;
+ 	Neighbors(2,stop[0],stop[1]);
+    for( int i = 0; i<nei.size(); i++)
+       	m[nei[i][0]][nei[i][1]] = mvp;
 }
 
 
@@ -233,9 +259,11 @@ void ExtendStartStop() {
 ////////////////////////////////////////////////////////////////////////////////
 
 double ang(vector<vector<int>> lineA, vector<vector<int>> lineB) {
+    
     // Get nicer vector form
     int vA[] = {(lineA[0][0]-lineA[1][0]), (lineA[0][1]-lineA[1][1])};
     int vB[] = {(lineB[0][0]-lineB[1][0]), (lineB[0][1]-lineB[1][1])};
+    
     // Get dot prod
     double dot_prod = inner_product(begin(vA), end(vA), begin(vB), 0.0);
 
@@ -244,12 +272,14 @@ double ang(vector<vector<int>> lineA, vector<vector<int>> lineB) {
     double magB = pow(inner_product(begin(vB), end(vB), begin(vB), 0.0),0.5);
     double angle;
     try {
+
         // Get angle in radians and then convert to degrees
          angle = acos(dot_prod/magB/magA);
     }
     catch(...) {
          angle = 0;
     }
+
     // Basically doing angle <- angle mod 360
     double ang_deg = fmod(((180.0/3.14)*(angle)),360.0);
     
@@ -268,79 +298,63 @@ double ang(vector<vector<int>> lineA, vector<vector<int>> lineB) {
 ////////////////////////////////////////////////////////////////////////////////
 
 vector<vector<int>> get_line(int x1, int y1, int x2, int y2) {
-
-	// m = rise / run
-	float m = 0.0;
-	vector<vector<int>> line;
-	if(x2 == x1) {
-		if(y2>y1)
-			for(int y = y1; y<=y2; ++y) {
-				line.push_back({x1,y});
-			}
-		
-		else {
-			for(int y = y2; y<=y1; ++y) {
-				line.push_back({x1,y});
-			}
-		
+    vector<vector<int>> points;
+    bool issteep;
+    if(abs(y2-y1) > abs(x2-x1))
+    	issteep = true;
+    else
+    	issteep = false;
+    if (issteep){
+        int temp;
+        temp = x1;
+        x1 = y1;
+        y1 = temp;
+        temp = x2;
+        x2 = y2;
+        y2 = temp;
+    }
+    bool rev = false;
+    if (x1 > x2){
+    	int temp;
+        temp = x1;
+        x1 = x2;
+        x2 = temp;
+        temp = y1;
+        y1 = y2;
+        y2 = temp;
+        rev = true;
+    }
+    int deltax = x2 - x1;
+    int deltay = abs(y2-y1);
+    int error = (int)(deltax / 2);
+    int y = y1;
+    int ystep = 0;
+    if (y1 < y2)
+        ystep = 1;
+    else
+        ystep = -1;
+    int count = 0;
+    for (int x = x1; x<x2+1 ; x++){
+        if (issteep && (count%4 == 0)){
+            points.push_back({y, x});
+        }
+        else if (count%4 == 0){
+            points.push_back({x, y});
 		}
-	}
-	
+        error -= deltay;
+        if (error < 0){
+            y += ystep;
+            error += deltax;
+        }
+        count++;
+    }
 
-	else if(x2>x1) {
-		int run = x2 - x1;
-		int rise = y2 - y1;
-		m = ((float) rise) / ((float) run);
-		if((run == 0) || (rise == 0)) {
-			m = 0.;
-		}
-		// solve for b
-		// (start with y = mx + b, subtract mx from both sides)
-		float b = y1 - (m * x1);
-
-		// note: assumes x2 > x1
-		for (int x = x1; x <= x2; ++x)
-		{
-		    // solve for y
-		    float y = (m * x) + b;
-
-		    // round to nearest int
-		    int rounded = (y > 0.0) ? floor(y + 0.5) : ceil(y - 0.5);
-
-		    // convert int result back to float, compare
-		    if ((float) rounded == y)
-				line.push_back({x,rounded});
-	
-		}
-
-	}
-	else {
-		int run = x1 - x2;
-		int rise = y1 - y2;
-		m = ((float) rise) / ((float) run);
-		if((run == 0) || (rise == 0)) {
-			m = 0.;
-		}
-		// solve for b
-		// (start with y = mx + b, subtract mx from both sides)
-		float b = y1 - (m * x1);
-
-		// note: assumes x2 > x1
-		for (int x = x2; x <= x1; ++x)
-		{
-		    // solve for y
-		    float y = (m * x) + b;
-
-		    // round to nearest int
-		    int rounded = (y > 0.0) ? floor(y + 0.5) : ceil(y - 0.5);
-
-		    // convert int result back to float, compare
-		    if ((float) rounded == y)
-		    	line.push_back({x,rounded});
-		}
-	}
-	return line;
+    // Reverse the list if the coordinates were reversed
+    if (rev)
+        reverse(points.begin(), points.end());
+    return points;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //                          Function Definition									
@@ -355,37 +369,17 @@ vector<vector<int>> get_line(int x1, int y1, int x2, int y2) {
 int CheckValid(vector<int> pt1, vector<int> pt2) {
 	vector<vector<int>> gline;
 	gline = get_line(pt1[0],pt1[1],pt2[0],pt2[1]);
-	//cout << gline.size()<<endl;
     for(int i = 0;i<gline.size();i++){
-        if (m[gline[i][0]][gline[i][1]] != mvp)
-            return 0;
+        if ((int)m[gline[i][0]][gline[i][1]] == nmvp){
+            return 0;}
         Neighbors(1,gline[i][0],gline[i][1]);
         for(int j = 0;j<nei.size(); j++){
-            if (m[nei[j][0]][nei[j][1]] != mvp){
+            if ((int)m[nei[j][0]][nei[j][1]] == nmvp){
                 return 0;
             }
         }
     }
     return 1;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//                          Function Definition									
-//   Name  - CheckDirect														
-//   Function  - This function check if a point from one tree has a direct line 
-//               of sight move to any branch of the other tree. This is done to 
-//               curb run time, and prevent wastage of search if a direct path 	
-//               is already visible.   											
-//   Arguments  - vector<int> pt(point of referrence), 
-//				  map<pair<int,int>, vector<vector<int>>> dict(Dictionary of the branches of	
-//                the other tree.)												
-////////////////////////////////////////////////////////////////////////////////
-    
-int CheckDirect(vector<int> pt, map<pair<int,int>, vector<vector<int>>> dict) {
-	for (std::map<pair<int,int>, vector<vector<int>>>::iterator it=dict.begin(); it!=dict.end(); ++it)        
-		if(CheckValid(pt,{{(it->first).first,(it->first).second }}))
-            return 1;
-    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -400,56 +394,26 @@ int CheckDirect(vector<int> pt, map<pair<int,int>, vector<vector<int>>> dict) {
 vector<vector<int>> CutNeighbors(pair<int,int> pos, vector<pair<int,int>> sD, pair<int,int> ap) {
     vector<vector<int>> nv;
     int i;
-    for (i = 0; i < nei.size(); i++) {
+    vector<vector<int>> neiC = nei;
+    for (i = 0; i < neiC.size(); i++) {
     	vector<vector<int>> lineA = {{ap.first, ap.second},{pos.first, pos.second}};
-		vector<vector<int>> lineB = {{pos.first, pos.second},{nei[i][0],nei[i][1]}};
-		int f = nei[i][0];
-		int s = nei[i][1];
-		auto it = std::find_if( sD.begin(), sD.end(),
-	    ([s,f](const pair<int, int>& element)
-	    {return ((element.first == f) && (element.second == s));}));
-	    int temp = (CheckValid({pos.first, pos.second},nei[i])) ;
-	    double temp2 = ang(lineA,lineB);
-	    cout << temp << " " << temp2 << " " << (it == sD.end()) << endl;
-        if ((CheckValid({pos.first, pos.second},nei[i]) == 1) && 
-        (ang(lineA,lineB) <=90 )&&
-        (it != sD.end()))
-        	cout << nei[i][0] << " "<< nei[i][1];
-           nv.push_back({nei[i][0], nei[i][1]}); 
-   }
+		vector<vector<int>> lineB = {{pos.first, pos.second},{neiC[i][0],neiC[i][1]}};
+		int f = neiC[i][0];
+		int s = neiC[i][1];
+		int it = -1;
+		for (int k = 0; k<sD.size(); k++){
+			if((sD[k].first == f) && (sD[k].second == s)){
+				it = k;
+				break;
+			}
+		}
+        if ((CheckValid({pos.first, pos.second},neiC[i]) == 1) && 
+        (ang(lineA,lineB) <=90.0 )&&
+        (it == -1))
+            nv.push_back({neiC[i][0], neiC[i][1]}); 
+    }
     return nv;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-//                          Function Definition
-//   Name  - LineOptimization
-//   Function  - This function optimizes the line by removing redundant points. 
-//               It does this by checking every point on the line with all the
-//               points after it to check for line of sight. If found, it 
-//               removes all the intermediate points.   
-//   Arguments  - vector<vector<int>> Line1 -> Final Path
-/////////////////////////////////////////////////////////////////////////////////
-
-vector<vector<int>> LineOptimization(vector<vector<int>> Line1) {
-    // Variable declaration for line optimization //
-    vector<vector<int>> Line2;
-    int pt1 = 0;
-    int pt2 = 1;
-    cout <<"Length of path Before = " << Line1.size() << endl;
-    // Line Optimization //
-    while (pt1<(Line1.size()-1) && pt2<(Line1.size()-1)) {
-        while ((CheckValid(Line1[pt1],Line1[pt2]) == 1) and 
-        (pt2 <(Line1.size()-1)))
-            pt2 +=1;
-        Line2.push_back(Line1[pt1]);
-        pt1 = pt2;
-        pt2 = pt1+1;
-    }
-    Line2.push_back(Line1[Line1.size()-1]);
-    cout << "Length of path After = " << Line2.size() << endl;
-    return Line2;
-}
-
 
 /////////////////////////////////////////////////////////////////////////////////
 //                          Function Definition
@@ -472,6 +436,62 @@ vector<vector<int>> LineComp(vector<vector<int>> Line) {
 
 ////////////////////////////////////////////////////////////////////////////////
 //                          Function Definition
+//   Name  - LineOptimization
+//   Function  - This function optimizes the line by removing redundant points. 
+//               It does this by checking every point on the line with all the
+//               points after it to check for line of sight. If found, it 
+//               removes all the intermediate points.   
+//   Arguments  - vector<vector<int>> Line1 -> Final Path
+/////////////////////////////////////////////////////////////////////////////////
+
+vector<vector<int>> LineOptimization(vector<vector<int>> Line1) {
+    
+    // Variable declaration for line optimization //
+    vector<vector<int>> Line2;
+    int pt1 = 0;
+    int pt2 = Line1.size()-1;
+    cout <<"Length of path Before = " << Line1.size() << endl;
+    
+    // Line Optimization //
+    while (pt1<(Line1.size()-1) && pt2>pt1) {
+        while ((CheckValid(Line1[pt1],Line1[pt2]) != 1) && 
+        (pt2 >pt1)){
+        	pt2 -=1;
+        }
+        Line2.push_back(Line1[pt1]);
+        pt1 = pt2+1;
+        pt2 = Line1.size()-1;
+    }
+    Line2.push_back(Line1[Line1.size()-1]);
+    cout << "Useful points = " << Line2.size() << endl;
+    Line2 = LineComp(Line2);
+    cout << "Length of path After = " << Line2.size() << endl;
+    vector<vector<int>> Line3;
+    pt2 = 0;
+    pt1 = Line2.size()-1;
+    cout <<"Length of path Before(reverse) = " << Line2.size() << endl;
+    
+    // Line Optimization //
+    while ((pt1 > 0) && (pt1>pt2)) {
+        while ((CheckValid(Line2[pt2],Line2[pt1]) != 1) && 
+        (pt1 > pt2)){
+        	//cout << (CheckValid(Line2[pt2],Line2[pt1])) << " " << Line2[pt2][0] << " " << Line2[pt2][1]<< " " << Line2[pt1][0]<< " " << Line2[pt1][1]<< endl; 
+        	pt2 +=1;
+        }
+        //cout << "\n"<< Line2[pt1][0] << " " <<Line2[pt1][1] << "\n\n"; 
+        Line3.push_back(Line2[pt1]);
+        pt1 = pt2-1;
+        pt2 = 0;
+    }
+    Line3.push_back(Line2[0]);
+    cout << "Useful points(reverse) = " << Line3.size() << endl;
+    Line3 = LineComp(Line3);
+    cout << "Length of path After(reverse) = " << Line3.size() << endl;
+    return Line3;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//                          Function Definition
 //   Name  - dot
 //   Function  - Used to find dot product between two vectors
 //   Arguments  - vector<int> vA -> Vector A, vector<int> vB -> Vector B
@@ -490,12 +510,6 @@ int dot(vector<int> vA, vector<int> vB){
 //   Arguments  - vector<vector<int>> Line
 /////////////////////////////////////////////////////////////////////////////////
 
-struct idmap
-{
-	int pos;
-	double Value;
-};
-
 vector<idmap> AngleDef(vector<vector<int>> Line){
     idmap temp2;
     vector<idmap> anglist ;
@@ -504,7 +518,7 @@ vector<idmap> AngleDef(vector<vector<int>> Line){
     for (int i = 1; i<Line.size() - 1; i++){
     	vector<vector<int>> lineA = {{Line[i-1][0], Line[i-1][1]},{Line[i][0], Line[i][1]}};
 		vector<vector<int>> lineB = {{Line[i][0],Line[i][1]},{Line[i+1][0], Line[i+1][1]}};
-    	temp = {Line[i][0], Line[i][0]};
+    	temp = {Line[i][0], Line[i][1]};
     	int it = distance(AF.begin(), find(AF.begin(), AF.end(), temp));
         temp2.pos = it;
         temp2.Value = ang({Line[i-1],Line[i]},{Line[i],Line[i+1]});
@@ -521,73 +535,73 @@ vector<idmap> AngleDef(vector<vector<int>> Line){
 /////////////////////////////////////////////////////////////////////////////////
 
 
-vector<int> SpeedList(vector<vector<int>> Line, vector<idmap> angleList) {
-    vector<int> speedlist;
+vector<double> SpeedList(vector<vector<int>> Line, vector<idmap> angleList) {
+    vector<double> speedlist;
     double speed;
     int i;
     for (i = 0; i < Line.size() - 20; i++) {
         int flag = 0;
         for (int j = 0; j< angleList.size(); j++){
-            double minspeed = 100.0 - int((angleList[j].pos/45.0) * 70.0);
+            double minspeed = 100.0 - int((angleList[j].Value/45.0) * 70.0);
+            
             // Change ranges depending on use case //
             if ((angleList[j].pos - i) == 0) {
                 speed = minspeed;
-                speedlist[i] = (int)speed;
+                speedlist.push_back(speed);
                 flag = 1;                
                 break;
             }
             else if (((angleList[j].pos - i) < 20) && ((angleList[j].pos - i) > 0)) {
-                speed = 100 - ((100.0 - minspeed)*(1 - ((angleList[j].pos - i)/20.0)));
-                speedlist[i] = (int)speed;
+                speed = 100.0 - ((100.0 - minspeed)*(1 - ((angleList[j].pos - i)/20.0)));
+                speedlist.push_back(speed);
                 flag = 1;
                 break;
             }
             else if (((angleList[j].pos - i)> -10) && ((angleList[j].pos - i) < 0)) {
-                speed = 100 - ((100.0 - minspeed)*(1 + ((angleList[j].pos - i)/10.0)));
-                speedlist[i] = (int)speed;
+                speed = 100.0 - ((100.0 - minspeed)*(1 + ((angleList[j].pos - i)/10.0)));
+                speedlist.push_back(speed);
                 flag = 1;
                 break;
             }
-            else {
-                flag = 1;
-                speedlist[i] = 100;
-            }
         }
-        if (flag == 0) {
-            speedlist[i] = 100;
-        }
+        if (flag == 0) 
+            speedlist.push_back(100.0);
+        
     }
-    for(int k = 0; k<20; k++){
-        speedlist[k+i] = int(100 - (100.0*(k/19.0)));
-    }
+    for(int k = 0; k<19; k++)
+        speedlist.push_back((100.0 - (100.0*(k/19.0))));
+       
     return speedlist;
 }
 
-
 int main() {
-	vector<int> nei;
 	vector<vector<int>> gline;
 	read_coord(x,y);
-	cout<<"Coordinates Read "<<x << " " << y <<endl;
 	stop[0] = (x+1024);
 	stop[1] = (y+1024);
+	cout<<"Coordinates Read "<<stop[0] << " " << stop[1] <<" "<< start[0]<<" "<<start[1] <<endl;
 	read_map();
 	cout<<"Map Read"<<endl;
 	rot90(3);
-	fliplr();
 	cout<<"Map Orientation set"<<endl;
 	ExtendStartStop();
 	int ErrorFree = 0;
+	int st_line = 0;
+	vector<vector<int>> LineFinal;
+	clock_t search_start;
 	while (ErrorFree == 0) {
-		//try {
+		try {
+
 			// Variable declerations for the Search tree that will begin from START
 			map <pair<int,int>, vector<vector<int>>> SetTrees;
 			SetTrees[{start[0],start[1]}].push_back({start[0],start[1]});
 			pair<int,int> pos = {start[0],start[1]};
 			vector<pair<int,int>> SetDismissed;
+			SetDismissed.push_back({start[0],start[1]});
 			pair<int,int> AnglePrevRef = {start[0]-1, start[1]-1};
 			pair<int,int> prev;
 			Neighbors(3,start[0],start[1]);
+
 			// Variable declerations for the Search tree that will begin from STOP     
 			map <pair<int,int>, vector<vector<int>>> SetTreesopp;
 			SetTreesopp[{stop[0],stop[1]}].push_back({stop[0],stop[1]});
@@ -596,15 +610,14 @@ int main() {
 			pair<int,int> prepre = {start[0]-1, start[1]-1};
 
 			// Variable Declaration for The final path 
-			vector<vector<int>> LineFinal;
+			LineFinal.clear();
 			vector<vector<int>> LineFinal2; 
 			int GoalFlag = 0 ;
 			LineFinal.push_back({start[0],start[1]});
-			LineFinal2.push_back({stop[0],stop[1]}); 
 			cout << "Variables set "<<endl;
+			st_line = 0;
 
 			// Check if there is a direct path from START to STOP 
-			int st_line = 0;
 			if (CheckValid(start,stop) == 1){
 			    GoalFlag = 1;   
 			    st_line = 1;
@@ -612,35 +625,34 @@ int main() {
 			
 			}
 			cout<<"Direct Path Checked" << endl;
-			clock_t search_start = clock();
+			search_start = clock();
 			Neighbors(3,start[0],start[1]);
 			cout<<"Starting Search" << endl;
 			while (GoalFlag == 0) {
 			    int finStep = 0;
 			    while (finStep == 0){
 			        vector<vector<int>> nV = CutNeighbors(pos,SetDismissed, AnglePrevRef); // nV(neighborsValid)
-			        cout<<"Found valid Neighbors" << endl;
 			        int nF, rtemp; // nF(notFound)
 			        pair<int,int> nC; // nC(neighborChoice)
-			        cout<<nV.size()<<endl;
 			        if (nV.size() == 0){
 			            nF = 1;
 			        }
 			        else{
 			            nF = 0;
+			            srand(time(NULL));
 			            rtemp = rand() % nV.size();
 			            nC = {nV[rtemp][0], nV[rtemp][1]};
 			        }
 			        if (nF == 1){
-			            pos = {SetTrees[{AnglePrevRef}][SetTrees[{AnglePrevRef}].size()-2][0], SetTrees[{AnglePrevRef}][SetTrees[{AnglePrevRef}].size()-2][1]};
-			            AnglePrevRef = {SetTrees[AnglePrevRef][SetTrees[AnglePrevRef].size()-3][0], SetTrees[AnglePrevRef][SetTrees[AnglePrevRef].size()-3][1]};
+			            pos = {SetTrees[{AnglePrevRef}][SetTrees[{AnglePrevRef}].size()-1][0], SetTrees[{AnglePrevRef}][SetTrees[{AnglePrevRef}].size()-1][1]};
+			            AnglePrevRef = {SetTrees[AnglePrevRef][SetTrees[AnglePrevRef].size()-2][0], SetTrees[AnglePrevRef][SetTrees[AnglePrevRef].size()-2][1]};
 			        }
 			        else{
-			            cout << "[" << clock() - search_start<<"] : " << "Searching ... " << endl; // To enable time taken
+			            cout << "[" << (double)(clock() - search_start)/1000000<<"] : " << "Searching ... " <<endl; // To enable time taken
 			            prepre = AnglePrevRef;
 			            SetDismissed.push_back(nC);
 			            vector<int> nCtemp = {nC.first, nC.second};
-			            int ret = CheckDirect(nCtemp , SetTreesopp); // Check for direct line of sight
+			            int ret = CheckValid(nCtemp,stop); // Check for direct line of sight
 			            AnglePrevRef = pos;        
 			            if (ret == 1){ // There is direct line of sight
 			                cout << "Found Goal" << endl;
@@ -652,15 +664,16 @@ int main() {
 			                SetTrees[nC].push_back({nCtemp[0],nCtemp[1]});
 
 			                // copy final tree from START 
-			                for (int ii = 0; ii<SetTrees[nC].size(); ii++){
+			                for (int ii = 0; ii<SetTrees[nC].size(); ii++)
 			                    LineFinal.push_back(SetTrees[nC][ii]);
-			                }
-			            }
+			                   			            }
 
 			            else{ // There is no direct line of sight
+			               
 			                // Add point to as a branch to START tree 
-			                SetTrees[nC] =SetTrees[pos];
+			                SetTrees[nC] = SetTrees[pos];
 			                SetTrees[nC].push_back(nCtemp);
+			               
 			                // Choose next point to search from 
 			                pos = nC;
 			     		    Neighbors(3,pos.first,pos.second);
@@ -669,57 +682,39 @@ int main() {
 		    	}
 		    }
 		ErrorFree = 1;
-		//}
-
-	   // catch(...){
-	    //    cout<< "Caught Index Error"<<endl;
-	    //    ErrorFree = 0 ;
-	   // }
+		}
+	    catch(...){
+	        cout<< "Caught Error"<<endl;
+	        ErrorFree = 0 ;
+	    }
 	}
-/*
-	""" Function calls for Final-Processing of Final Path """
 
-	""" Convert the two branches from START and STOP into one """
-	LineFinal2.reverse() # Reverse the final path from STOP tree
-	LineFinal+=LineFinal2 # Combine into one path
+	// Function calls for Final-Processing of Final Path //
+	LineFinal.push_back({stop[0],stop[1]});
 
-	""" Try processing multiple times to see different results """
-	start_time5 = time.time()
-	LF1 = LineComp(LineFinal)
-	if not st_line: 
-	    print " Starting Optimization"    
-	    print "Map - without optimization"
-	    LF1 = LineComp(LF1)
-	    LF2 = LineOptimization(LF1)
-	    print "Map - first optimization"
-	    LF2 = LineComp(LF2)
-	    LF = LineOptimization(LF2)
+    // Try processing multiple times to see different results //
+	clock_t opt_start2 = clock();
+	vector<vector<int>>LF = LineComp(LineFinal);
+	vector<vector<int>> LF1;
+	if(!st_line){ 
+	    cout << "Starting Optimization" << endl;   
+	    cout << "Map - without optimization" << endl;
+	    LF1 = LineOptimization(LF);
+	    DisplayPath(LF1);
 
-	else:
-	    LF = LF1
-	stop_time5 = time.time()
-	time5 = stop_time5 - start_time5
-
-	angs = AngleDef(LF)
-	SF = np.array(LineComp(LF))
-	SF = SF.astype(float)
-	#print "SSSSSSFFFFFF = ", SF
-	speeds = SpeedList(SF,angs)
-	#print "SPEEEEEEDDDDDSSSS = ",speeds
-	arr = Float64MultiArray()
-	setsend = [[0,0,100]for ii in range(len(SF))]
-	for i in range(len(SF)-1):
-	    for k in range(2):
-	        SF[i][k] -= 1024.0
-	        SF[i][k] /= scale
-	for i in range(len(SF)-1):
-	    setsend[i] = [SF[i][0],SF[i][1],speeds[str(i)]]
-	arr.data = np.ndarray.flatten(np.array(setsend)).tolist() 
-	print "Path Sent"
-
-	#print "ARRRRRRRRRRRRRRRRR = ", arr
-	pub.publish(arr)
-*/
+	}
+	cout << "Time taken:- " <<(double)(clock() - search_start)/1000000 << endl;
+	vector<idmap> angs = AngleDef(LF1);
+	vector<vector<double>> Path;
+	vector<double> speeds = SpeedList(LF1,angs);
+    ofstream myfile;
+    myfile.open(outpath.c_str());
+	for (int i = 0; i<speeds.size(); i++) {
+        Path.push_back({((LF1[i][0] - 1024.0)/scale) ,((LF1[i][1] - 1024.0)/scale)});
+       	//cout << speeds[i] << " " << Path[i][0] << " " << Path[i][1] << endl;
+       	myfile << Path[i][0] << "\n" << Path[i][1] << "\n" << speeds[i] << "\n";
+    }
+    myfile.close();
 	return 0;
 }
 
