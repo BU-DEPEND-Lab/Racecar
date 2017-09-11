@@ -3,12 +3,13 @@
 // include cpp libraries
 #include <iostream>
 #include <string>
+#include <fstream>
 #include <sstream>
-#include <vector>
 #include <math.h>
 #include <algorithm>
 #include <stdlib.h>
 #include <iterator>
+using namespace std;
 
 #define	TRUE	1
 #define	FALSE	0
@@ -26,18 +27,13 @@ struct Msg{
 };
 
 
-using namespace std;
+
 
 double look_ahead_dist, goalRadius, speed;
 double prev_steer = 0;
 double prev_speed = 0;
 int STOP_Dist = -1;
-int flag = 0;
 int planner_coord;
-
-
-vector<double> path_y, path_x, speeds;
-
 
 pose poseUpdate(const radl_in_t * in)
 {
@@ -48,6 +44,8 @@ pose poseUpdate(const radl_in_t * in)
     q.y = in->slam_out_pose->orientation_y;
     q.z = in->slam_out_pose->orientation_z;
     q.w = in->slam_out_pose->orientation_w;
+
+    cout << "q.x is :::::::: " << q.x << endl;
 	  // roll (x-axis rotation)
 	  double sinr = +2.0 * (q.w * q.x + q.y * q.z);
 	  double cosr = +1.0 - 2.0 * (q.x * q.x + q.y * q.y);
@@ -79,7 +77,7 @@ double dist(double x1, double x2, double y1, double y2){
 
 bool goalCheck(double goal_x, double goal_y, double curr_x, double curr_y){
   double goalRadius = dist(goal_x, curr_x, goal_y, curr_y);
-  cout << "goalRadius" << goalRadius << endl;
+  cout << "goalRadius " << goalRadius << endl;
   if ( goalRadius < 2.0 )
     return TRUE;
   else
@@ -93,23 +91,6 @@ void Robot::robot () {
 }
 
 Robot myrobot;
-
-void desired_track(const radl_in_t * in){
-    path_y.clear(); path_x.clear(); speeds.clear();
-    vector<double> *coords = in->path_planner->data;
-    vector<double>::iterator it = coords->begin();
-    
-    planner_coord = 0;
-    
-    while( it != coords->end() ){
-      path_x.push_back(*it);
-      path_y.push_back(*(++it));
-      speeds.push_back(*(++it));
-      planner_coord ++;
-    }
-    flag = 1;
-}
-
 
 // Set Look ahead distance
 double look_ahead(double curr_speed){
@@ -177,7 +158,7 @@ double speedControl(double speed_percentage, double prev_speed){
 }
 
 
-void control(const radl_in_t * in, radl_out_t * out){
+void PidController::control(const radl_in_t * in, radl_out_t * out){
     Msg msg;
     
     pose p = poseUpdate(in);
@@ -194,7 +175,8 @@ void control(const radl_in_t * in, radl_out_t * out){
         cout << "GOAL REACHED" << endl;
         out->drive_parameters->velocity = msg.velocity;
         out->drive_parameters->angle = msg.angle;
-        exit(0);
+        //exit(0);
+		return;
       }
       
       if ( (STOP_Dist != -1) && (STOP_Dist < 150) ){
@@ -216,6 +198,8 @@ void control(const radl_in_t * in, radl_out_t * out){
       vector<double> startingPoints;
       vector<double>::iterator it = startingPoints.begin();
       
+
+
       for( int i = 0; i < planner_coord; i ++ ){
         startingPoints.push_back(0.0);
         double d = dist(path_x[i], myrobot.x, path_y[i], myrobot.y);
@@ -289,23 +273,62 @@ void control(const radl_in_t * in, radl_out_t * out){
     msg.angle = 0.0;
     msg.velocity = 0.0;
     
-   
-    
-    
-    
-    
-    
 }
 
 void camera(const radl_in_t * in){
-  
+  STOP_Dist = in->stop_sign_distance->data;
 }
 
+/*void PidController::desired_track(const radl_in_t * in){
+    path_y.clear(); path_x.clear(); speeds.clear();
+
+    vector<double> coords (10);
+
+  copy ( in->path_planner->data.begin(), in->path_planner->data.end(), coords.begin() );
+  
+    vector<double>::iterator it = coords.begin();
+    
+    planner_coord = 0;
+    
+    while( it != coords.end() ){
+      path_x.push_back(*it);
+      path_y.push_back(*(++it));
+      speeds.push_back(*(++it));
+      planner_coord ++;
+    }
+    flag = 1;
+}*/
+
+PidController::PidController (){
+  string line;
+  const char *tmp;
+  ifstream myfile ("/home/bu/race_ws/Racecar/radler/pure_pursuit/src/example.txt");
+  if (myfile.is_open())
+  {
+    while (getline (myfile,line)) {
+      if(line == "")
+        break;
+      tmp = line.c_str();
+      path_x.push_back(strtod(tmp,NULL));
+      planner_coord ++;
+      getline (myfile,line);
+      tmp = line.c_str();
+      path_y.push_back(strtod(tmp,NULL));
+      getline (myfile,line);
+      tmp = line.c_str();
+      speeds.push_back(strtod(tmp,NULL));
+    }
+    myfile.close();
+    cout << "Path reading finished" << endl;
+  } else cout << "Unable to open file\n"; 
+  flag = 1;
+	cout << "hello world from pidController" << endl;
+}
 
 
 void PidController::step(const radl_in_t * in, const radl_in_flags_t* inflags,
                        radl_out_t * out, radl_out_flags_t* outflags){
-    desired_track(in);
+    //desired_track(in);
     control(in, out);
     camera(in);
 }

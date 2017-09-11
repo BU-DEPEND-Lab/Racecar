@@ -1,0 +1,11 @@
+#include RADL_HEADER
+
+#include "ros/ros.h"
+#include "std_msgs/Int32.h"
+#include "geometry_msgs/PoseStamped.h"
+
+class Gateway {
+public:
+
+
+}

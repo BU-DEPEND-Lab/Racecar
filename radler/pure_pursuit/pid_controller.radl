@@ -1,8 +1,15 @@
+opencv_lib : cmake_library {
+    PATH "/usr/local/share/OpenCV"
+    CMAKE_MODULE "OpenCV"
+    CMAKE_VAR_LIBRARIES "OpenCV_LIBRARIES"
+    CMAKE_VAR_INCLUDE_DIRS "OpenCV_INCLUDE_DIRS"
+}
+
 settings : module_settings {
     MODULE_BASE_PATH "src"
 }
 
-basic_rate : duration 500msec
+basic_rate : duration 50msec
 
 drive_param : topic {
     FIELDS
@@ -15,10 +22,12 @@ distance : topic {
 		data: int32 0
 }
 
-paths : topic {
-	FIELDS
-		data: float64 0
-}
+# paths : topic {
+# 	FIELDS
+# 		data: array {TYPE "float64" SIZE 10 VALUES
+# 				0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
+#       	      }
+# }
 
 
 PoseStamped : topic {
@@ -38,17 +47,40 @@ pid_controller : node {
     SUBSCRIBES
 	stop_sign_distance { TOPIC distance MAXLATENCY 1msec}
         slam_out_pose { TOPIC PoseStamped MAXLATENCY 1msec}
-	path_planner { TOPIC paths MAXLATENCY 1msec}
+	# path_planner { TOPIC paths MAXLATENCY 1msec}
     PERIOD basic_rate
     CXX { HEADER "pid_controller.h" FILENAME "pid_controller.cpp" CLASS "PidController"}
 }
+
+stopsign_detection : node {
+    PUBLISHES
+        stop_sign_distance { TOPIC distance }
+    PERIOD basic_rate
+    CXX { HEADER "stopsign_detection.h" FILENAME "stopsign_detection.cpp" CLASS "StopsignDetection" LIB opencv_lib}
+}
+
+
+controller_gateway : node {
+  PERIOD basic_rate
+  PUBLISHES slam_out_pose {
+    TOPIC PoseStamped
+  }
+  #SUBSCRIBES input1 {
+  #  TOPIC device_value
+  #  MAXLATENCY 10msec
+  #}
+  CXX { HEADER "gateway.h" CLASS "Gateway" }
+}
+
 
 sys1 : linux {
   NODES_UID 1000
   IMG "linux.img"
   IP 192.168.10.201
   NODES
-   pid_controller 
+   pid_controller
+   stopsign_detection
+   controller_gateway
 }
 
 plant : plant {

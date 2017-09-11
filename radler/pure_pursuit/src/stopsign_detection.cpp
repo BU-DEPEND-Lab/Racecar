@@ -1,32 +1,10 @@
-// cpp includes
-#include <iostream>
-#include <vector>
-#include <deque>
-
-// opencv includes
-#include <opencv2/core/core.hpp>
-#include <opencv2/contrib/contrib.hpp>
-#include <opencv2/objdetect/objdetect.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/gpu/gpu.hpp>
-
-
-// ROS includes
-
-#include "ros/ros.h"
-#include "std_msgs/String.h"
-#include "std_msgs/Int32.h"
-#include "geometry_msgs/Point.h"
-#include <sstream>
-
 #include "stopsign_detection.h"
 
 using namespace std;
 using namespace cv;
 using namespace cv::gpu;
 
-#define minSize 40
+const int minSize = 40;
 
 int disEstimate(int width)
 {
@@ -44,52 +22,27 @@ int disEstimate(int width)
 	}
 }
 
-
-
-
-int main(int argc, char **argv)
-{
-	ros::init(argc, argv, "stopsign_detection");
-	ros::NodeHandle n;
-	ros::Publisher bd_box_pub = n.advertise<geometry_msgs::Point>("/stop_sign_bd_box", 1000);
-	ros::Publisher stop_sign_dis = n.advertise<std_msgs::Int32>("/stop_sign_distance", 1000);
-
-	ros::Rate loop_rate(25);
-
-	string cascadeName = argv[1];
-
-	string display;
-	if ( argc > 2 ) 
-	{
-		display = argv[2];	
-	}
-
-
-	int QueSize = 10;
-	int QuePicker = QueSize >> 1;
-	deque<int> widthQue(QueSize, 0);
-	deque<int> xQue(QueSize, 0);
-	deque<int> yQue(QueSize, 0);
-
-	CascadeClassifier_GPU cascade_gpu;
-	VideoCapture capture(0);
-	if(!capture.isOpened()) {std::cout << "camera open failed" << std::endl; return -1;}
- 
-	int gpuCnt = getCudaEnabledDeviceCount();   // gpuCnt >0 if CUDA device detected
-	if(gpuCnt==0) return -1;  // no CUDA device found, quit
- 
+StopsignDetection::StopsignDetection() {
+	QuePicker = QUESIZE >> 1;
+	cascadeName = "/home/bu/race_ws/Racecar/sensor_perception/camera/stopsign_detection/data/stopsign_detector.xml";
+	gpuCnt = getCudaEnabledDeviceCount();
+	widthQue = deque<int> (QUESIZE, 0);
+	xQue = deque<int> (QUESIZE, 0);
+	yQue = deque<int> (QUESIZE, 0);
+	capture = VideoCapture(0);
+	if(!capture.isOpened()) {std::cout << "camera open failed" << std::endl;}
 	if(!cascade_gpu.load(cascadeName))
-		return -1;  // failed to load cascade file, quit
+		{cout << "failed to load cascade file " << endl;}  // failed to load cascade file, quit
+	if(gpuCnt==0) {std::cout << "gpu error" << endl;}
+	cout << "stopsign_detection initialized" << endl;
+	frmCnt = 0;
+	totalT = 0.0;
+}
 
-		 
+void StopsignDetection::step(const radl_in_t * in, const radl_in_flags_t* inflags,
+	radl_out_t * out, radl_out_flags_t* outflags){
 
-	Mat frame;
-	long frmCnt = 0;
-	double totalT = 0.0;
-
-	while(ros::ok())
-	{
-		capture >> frame;   // grab current frame from the camera
+	capture >> frame;   // grab current frame from the camera
 		double t = (double)getTickCount();
  
 		GpuMat faces;
@@ -164,31 +117,27 @@ int main(int argc, char **argv)
 		int midY = *(itY + QuePicker);
 
 
-		geometry_msgs::Point msg;
-		msg.x = midX;
-		msg.y = midY;
-		msg.z = midWidth;
-		bd_box_pub.publish(msg);
+		// geometry_msgs::Point msg;
+		// msg.x = midX;
+		// msg.y = midY;
+		// msg.z = midWidth;
+		// bd_box_pub.publish(msg);
 
 		
-		std_msgs::Int32 distanceMsg;
+		// std_msgs::Int32 distanceMsg;
 		int stopDis;
 		if ( midWidth ) stopDis = disEstimate(midWidth);
 		else stopDis = -1;
-		distanceMsg.data = stopDis;
-		stop_sign_dis.publish(distanceMsg);
-
-
-		ros::spinOnce();
-		loop_rate.sleep();
+		out->stop_sign_distance->data = stopDis;
+		
 		
 		if ( midWidth )
 		{
 			cout << "Distance is : " << disEstimate(midWidth) << endl;
 		}
 		
-		
-		if ( "1" == display )
+		// display
+		if ( 1 )
 		{
 		    Point pt1;
 			pt1.x = midX;
@@ -199,10 +148,8 @@ int main(int argc, char **argv)
 		    
 			imshow("stopSigns", frame);
 			if(waitKey(10)==27) 
-				break;
+				return;
 		}
 		cout << "fps: " << 1.0/(totalT/(double)frmCnt) << endl;
-	}
- 
-   
+
 }

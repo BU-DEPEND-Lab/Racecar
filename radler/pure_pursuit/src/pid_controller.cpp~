@@ -35,10 +35,6 @@ int STOP_Dist = -1;
 int flag = 0;
 int planner_coord;
 
-
-vector<double> path_y, path_x, speeds;
-
-
 pose poseUpdate(const radl_in_t * in)
 {
     // orientation data
@@ -79,7 +75,7 @@ double dist(double x1, double x2, double y1, double y2){
 
 bool goalCheck(double goal_x, double goal_y, double curr_x, double curr_y){
   double goalRadius = dist(goal_x, curr_x, goal_y, curr_y);
-  cout << "goalRadius" << goalRadius << endl;
+  cout << "goalRadius " << goalRadius << endl;
   if ( goalRadius < 2.0 )
     return TRUE;
   else
@@ -93,23 +89,6 @@ void Robot::robot () {
 }
 
 Robot myrobot;
-
-void desired_track(const radl_in_t * in){
-    path_y.clear(); path_x.clear(); speeds.clear();
-    vector<double> *coords = in->path_planner->data;
-    vector<double>::iterator it = coords->begin();
-    
-    planner_coord = 0;
-    
-    while( it != coords->end() ){
-      path_x.push_back(*it);
-      path_y.push_back(*(++it));
-      speeds.push_back(*(++it));
-      planner_coord ++;
-    }
-    flag = 1;
-}
-
 
 // Set Look ahead distance
 double look_ahead(double curr_speed){
@@ -194,7 +173,8 @@ void control(const radl_in_t * in, radl_out_t * out){
         cout << "GOAL REACHED" << endl;
         out->drive_parameters->velocity = msg.velocity;
         out->drive_parameters->angle = msg.angle;
-        exit(0);
+        //exit(0);
+		return;
       }
       
       if ( (STOP_Dist != -1) && (STOP_Dist < 150) ){
@@ -289,18 +269,37 @@ void control(const radl_in_t * in, radl_out_t * out){
     msg.angle = 0.0;
     msg.velocity = 0.0;
     
-   
-    
-    
-    
-    
-    
 }
 
 void camera(const radl_in_t * in){
-  
+  STOP_Dist = in->stop_sign_distance->data;
 }
 
+void desired_track(const radl_in_t * in){
+    path_y.clear(); path_x.clear(); speeds.clear();
+
+    vector<double> coords (10);
+
+  copy ( in->path_planner->data.begin(), in->path_planner->data.end(), coords.begin() );
+  
+    vector<double>::iterator it = coords.begin();
+    
+    planner_coord = 0;
+    
+    while( it != coords.end() ){
+      path_x.push_back(*it);
+      path_y.push_back(*(++it));
+      speeds.push_back(*(++it));
+      planner_coord ++;
+    }
+    flag = 1;
+}
+
+PidController::PidController (){
+  
+
+	cout << "hello world from pidController" << endl;
+}
 
 
 void PidController::step(const radl_in_t * in, const radl_in_flags_t* inflags,
