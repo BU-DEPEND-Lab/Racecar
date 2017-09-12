@@ -1,0 +1,3 @@
+$ ./radler.sh --ws_dir {catkin_ws}/src compile {path/to/.radl/file} --ROS
+
+example: $ ./radler.sh --ws_dir /tmp/catkin_ws/src compile /home/bu/race_ws/Racecar/radler/pure_pursuit/pid_controller.radl --ROS
