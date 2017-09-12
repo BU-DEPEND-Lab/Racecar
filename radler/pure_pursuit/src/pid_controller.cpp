@@ -35,6 +35,28 @@ double prev_speed = 0;
 int STOP_Dist = -1;
 int planner_coord;
 
+
+int minIndex(vector<double>::iterator start, vector<double>::iterator end) {
+
+    if (start == end) return 0;
+
+    vector<double>::iterator first, minimum = start;
+    int counter = 0;
+
+    while ( start != end ) {
+        // cout << "start is : " << *start << "  min is : " << *minimum << endl;
+        if (*start < *minimum) {
+          // cout << "min in " << endl;
+          minimum = start;
+          counter ++;
+        }
+        start ++;
+    }
+    cout << counter << endl;
+    return counter;
+
+}
+
 pose poseUpdate(const radl_in_t * in)
 {
     // orientation data
@@ -196,9 +218,6 @@ void PidController::control(const radl_in_t * in, radl_out_t * out){
       // find starting point along the path --> closest point on the path
       
       vector<double> startingPoints;
-      vector<double>::iterator it = startingPoints.begin();
-      
-
 
       for( int i = 0; i < planner_coord; i ++ ){
         startingPoints.push_back(0.0);
@@ -206,8 +225,12 @@ void PidController::control(const radl_in_t * in, radl_out_t * out){
         startingPoints[i] = d;
       }
       
+      vector<double>::iterator it = startingPoints.begin();
+      cout << " startingPoints first is : " << *it << endl;
+      cout << "startingPoints size is: " << startingPoints.size() << endl;
       
       int startIndex = (int)(min_element(it, startingPoints.end()) - it);
+      //int startIndex = minIndex(it, startingPoints.end());
       cout << "startIndex = " << startIndex << endl;
       
       // Find carrot point on path
@@ -231,7 +254,7 @@ void PidController::control(const radl_in_t * in, radl_out_t * out){
         if ( i < startIndex ){
           continue;
         }
-        else if ( i > startIndex ){
+        else if ( i >= startIndex ){
           if ( possible_l[i] == l_carrot ){
             carrotIndex = i;
           }
@@ -277,6 +300,8 @@ void PidController::control(const radl_in_t * in, radl_out_t * out){
 
 void camera(const radl_in_t * in){
   STOP_Dist = in->stop_sign_distance->data;
+  STOP_Dist = 200;
+  cout << "stop dist is : " << STOP_Dist << endl;
 }
 
 /*void PidController::desired_track(const radl_in_t * in){
@@ -329,6 +354,8 @@ PidController::PidController (){
 void PidController::step(const radl_in_t * in, const radl_in_flags_t* inflags,
                        radl_out_t * out, radl_out_flags_t* outflags){
     //desired_track(in);
+    cout << "incoming pose msg x" << in->slam_out_pose->position_x << endl;
+
     control(in, out);
     camera(in);
 }

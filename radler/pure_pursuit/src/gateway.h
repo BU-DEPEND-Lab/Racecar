@@ -3,6 +3,7 @@
 #include "ros/ros.h"
 #include "std_msgs/Int32.h"
 #include "geometry_msgs/PoseStamped.h"
+using namespace std;
 
 class Gateway {
 public:
