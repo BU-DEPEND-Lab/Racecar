@@ -65,10 +65,10 @@ controller_gateway : node {
   PUBLISHES slam_out_pose {
     TOPIC PoseStamped
   }
-  #SUBSCRIBES input1 {
-  #  TOPIC device_value
-  #  MAXLATENCY 10msec
-  #}
+  SUBSCRIBES drive_parameters {
+    TOPIC drive_param
+    MAXLATENCY 10msec
+  }
   CXX { HEADER "gateway.h" CLASS "Gateway" }
 }
 
