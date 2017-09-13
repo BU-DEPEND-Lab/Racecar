@@ -24,7 +24,7 @@ int disEstimate(int width)
 
 StopsignDetection::StopsignDetection() {
 	QuePicker = QUESIZE >> 1;
-	cascadeName = "/home/bu/race_ws/Racecar/sensor_perception/camera/stopsign_detection/data/stopsign_detector.xml";
+	cascadeName = "/home/bu/race_ws/Racecar/sensor_perception/camera/stopsign_detection/data/stopsign_classifier.xml";
 	gpuCnt = getCudaEnabledDeviceCount();
 	widthQue = deque<int> (QUESIZE, 0);
 	xQue = deque<int> (QUESIZE, 0);
@@ -89,15 +89,7 @@ void StopsignDetection::step(const radl_in_t * in, const radl_in_flags_t* inflag
 			yQue.pop_front();
 		}
 
-		// for(int i=0;i<detect_num;++i)
-		// {
-		//	Point pt1 = cfaces[i].tl();
-		//	Size sz = cfaces[i].size();
-		//	Point pt2(pt1.x+sz.width, pt1.y+sz.height);
-		//	rectangle(frame, pt1, pt2, Scalar(255));
-		//	int pp = 0;
-		//}  // retrieve all detected faces and draw rectangles for visualization
-		
+
 		// get width median value
 		vector<int> sortedWidth( widthQue.begin(), widthQue.end() );
 		sort( sortedWidth.begin(), sortedWidth.end() );
@@ -116,12 +108,6 @@ void StopsignDetection::step(const radl_in_t * in, const radl_in_flags_t* inflag
 		vector<int>::iterator itY = sortedY.begin();	
 		int midY = *(itY + QuePicker);
 
-
-		// geometry_msgs::Point msg;
-		// msg.x = midX;
-		// msg.y = midY;
-		// msg.z = midWidth;
-		// bd_box_pub.publish(msg);
 
 		
 		// std_msgs::Int32 distanceMsg;

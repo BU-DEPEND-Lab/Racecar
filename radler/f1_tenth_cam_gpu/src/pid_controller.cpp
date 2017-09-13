@@ -304,26 +304,6 @@ void camera(const radl_in_t * in){
   cout << "stop dist is : " << STOP_Dist << endl;
 }
 
-/*void PidController::desired_track(const radl_in_t * in){
-    path_y.clear(); path_x.clear(); speeds.clear();
-
-    vector<double> coords (10);
-
-  copy ( in->path_planner->data.begin(), in->path_planner->data.end(), coords.begin() );
-  
-    vector<double>::iterator it = coords.begin();
-    
-    planner_coord = 0;
-    
-    while( it != coords.end() ){
-      path_x.push_back(*it);
-      path_y.push_back(*(++it));
-      speeds.push_back(*(++it));
-      planner_coord ++;
-    }
-    flag = 1;
-}*/
-
 PidController::PidController (){
   string line;
   const char *tmp;
@@ -353,9 +333,6 @@ PidController::PidController (){
 
 void PidController::step(const radl_in_t * in, const radl_in_flags_t* inflags,
                        radl_out_t * out, radl_out_flags_t* outflags){
-    //desired_track(in);
-    cout << "incoming pose msg x" << in->slam_out_pose->position_x << endl;
-
     control(in, out);
     camera(in);
 }
