@@ -103,7 +103,7 @@ double dist(double x1, double x2, double y1, double y2){
 bool goalCheck(double goal_x, double goal_y, double curr_x, double curr_y){
   double goalRadius = dist(goal_x, curr_x, goal_y, curr_y);
   cout << "goalRadius " << goalRadius << " " << goal_x << " " << goal_y <<" " << curr_x << " " << curr_y << endl;
-  if ( goalRadius < 0.2 )
+  if ( goalRadius < 1.0 )
     return TRUE;
   else
     return FALSE;
@@ -113,11 +113,11 @@ bool goalCheck(double goal_x, double goal_y, double curr_x, double curr_y){
 // Set Look ahead distance
 double look_ahead(double curr_speed){
   if ( curr_speed < 2 )
-    look_ahead_dist = 0.2;
+    look_ahead_dist = 0.5;
   if ( curr_speed > 2 && curr_speed < 10 )
-    look_ahead_dist = 0.2;
+    look_ahead_dist = 0.5;
   if ( curr_speed > 10 )
-    look_ahead_dist = 0.2;
+    look_ahead_dist = 0.5;
   
   return look_ahead_dist;
 }
@@ -125,17 +125,36 @@ double look_ahead(double curr_speed){
 // calculate desired steering angle
 double calculate_desired_steer(double carrot_x, double carrot_y, double curr_x, double curr_y, double curr_yaw){
   ////double delta_x = carrot_y - curr_y;
-  double delta_x = carrot_y - curr_y;
+  double delta_y = carrot_y - curr_y;
   // l = look ahead distance from robot to carrot
   cout << "curr_x" << curr_x << " curr_y " << curr_y << " carrot_x " << carrot_x << " carrot_y " << carrot_y << endl;
   double l = sqrt(((carrot_x - curr_x) * (carrot_x - curr_x)) + ((carrot_y - curr_y) * (carrot_y - curr_y)));
-  cout << "l = " << l << endl;
+  cout << "l = " << l << " " << delta_y<< endl;
   
-  double theta = asin( delta_x / l ) - 1.56; //gazebo
-  cout << " theta = " << theta << endl;
+  double theta = asin( delta_y / l ) ; //gazebo
+  if(curr_x > carrot_x && theta > 0){
+    theta = 3.14 - theta;
+  }
+  else if(curr_x > carrot_x && theta < 0){
+    theta = - 3.14 - theta;
+  }
+  cout << " theta raw = " << theta << endl;
+  //if (theta > 3.14 && theta < (3.14+1.57))
+  //  theta = theta - 3.14;
+  //if (theta < -3.14)
+  //  theta = 3.14 + (theta + 3.14) + 1.57;
+  //cout << " theta = " << theta << endl;
+    double ds = curr_yaw - theta;
+
   cout << "curr_yaw = " << curr_yaw << endl;
-  
-  return curr_yaw - theta;
+  cout <<"desired raw = "<< ds<< endl;
+  if (ds >= 3.14){
+    ds = -(6.28 - ds);
+   }
+  if (ds < -3.14){
+    ds = (6.28 + ds);
+  }
+  return ds;
 }
 
 
@@ -149,10 +168,10 @@ double PD_controller(double desired_steer, double diff_error){
     steerOutput = 0.1;
   else if( (steerOutput > -0.1) && (steerOutput < 0.0) )
   	steerOutput = -0.1;
-  else if( steerOutput < -0.5 )
-  	steerOutput = -0.5;
-  else if( steerOutput > 0.5 )
-  	steerOutput = 0.5;
+  else if( steerOutput < -0.7 )
+  	steerOutput = -0.7;
+  else if( steerOutput > 0.7 )
+  	steerOutput = 0.7;
   
   return steerOutput;
 }
@@ -187,7 +206,7 @@ void PidController::control(const radl_in_t * in, radl_out_t * out){
     myrobot.yaw = p.yaw;
 
     if(myrobot.x != 0.0 || myrobot.y != 0.0){
-    cout << "myrobot is: " << myrobot.x << " , " << myrobot.y << endl;
+    // cout << "myrobot is: " << myrobot.x << " , " << myrobot.y << endl;
 	    if ( 1 == flag ){
 	      double goal_x = path_x.back();
 	      double goal_y = path_y.back();
@@ -289,7 +308,7 @@ void PidController::control(const radl_in_t * in, radl_out_t * out){
 	      
 	      // Publish message
 	      msg.angle = steerOutput;
-	      msg.velocity = 5;
+	      msg.velocity = 7;
 	      cout << "flag = 1, vel = " << msg.velocity << ", angle = " << msg.angle << endl;
 	      out->drive_parameters->velocity = msg.velocity;
 	      out->drive_parameters->angle = msg.angle;
@@ -338,11 +357,11 @@ PidController::PidController (){
       if(line == "")
         break;
       tmp = line.c_str();
-      path_x.push_back((strtod(tmp,NULL))-1.0);
+      path_x.push_back((strtod(tmp,NULL)));
       planner_coord ++;
       getline (myfile,line);
       tmp = line.c_str();
-      path_y.push_back(strtod(tmp,NULL)-0.7);
+      path_y.push_back(strtod(tmp,NULL));
       getline (myfile,line);
       tmp = line.c_str();
       speeds.push_back(strtod(tmp,NULL));
@@ -367,6 +386,3 @@ void PidController::step(const radl_in_t * in, const radl_in_flags_t* inflags,
     control(in, out);
     //camera(in);
 }
-
-
-
