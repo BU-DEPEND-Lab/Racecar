@@ -25,8 +25,8 @@ using namespace std;
 using namespace cv;
 struct passwd *pw = getpwuid(getuid());
 const string homedir = pw->pw_dir;
-string coordpath = homedir + "/catkin_ws/src/gzbo2_generator/output/coord.txt";
-string outpath = homedir + "/catkin_ws/src/race/src/path.txt";
+string coordpath = homedir + "/Desktop/LooseFiles/output/coord.txt";
+string outpath = homedir + "/Desktop/LooseFiles/output/path.txt";
 vector<int> start = {(1024), (1024)};
 vector<int> stop = {(0), (0)};
 uint8_t m [2048][2048];
@@ -43,73 +43,97 @@ int walhigh = 3;
 int wallow = 2;
 Mat img;
 vector<vector<int>> nei;
-string mappath = homedir + "/catkin_ws/src/gzbo2_generator/output/map.png";
+string mappath = homedir + "/Desktop/LooseFiles/output/map.png";
 
 struct idmap
 {
-	int pos;
-	double Value;
+    int pos;
+    double Value;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Name : read_coord	                                                        
-// Return type : void	                                                        
-// Parameters : int &, int &						                            
-// Function : Reads the coordinates from the file coord.txt					 	
-// Return : N/A  																
-////////////////////////////////////////////////////////////////////////////////	
+// Name : read_coord                                                            
+// Return type : void                                                           
+// Parameters : int &, int &                                                    
+// Function : Reads the coordinates from the file coord.txt                     
+// Return : N/A                                                                 
+////////////////////////////////////////////////////////////////////////////////    
 void read_coord(int &x, int &y) {
-	string line;
-	int i = 0;
-	int neg_flag = 0;
-	ifstream myfile (coordpath.c_str());
-	if (myfile.is_open()) {
-		getline (myfile,line);
-		getline (myfile,line);
-		getline (myfile,line);
-	}
-	line.erase(line.begin() + 0, line.begin() + 17);
-	while(line[i] != ',') {
-		if(line[i] == '-') {
-			neg_flag = -1;
-		}
-		else {
-			x = (x*10)+(line[i] - 48);
-		}
-		i++;
-	}
-	if(neg_flag)
-		x *= -1;
-	i+=2;
-	neg_flag = 0;
-	while(line[i]) {
-		if(line[i] == '-') {
-			neg_flag = -1;
-		}
-		else {
-			y = (y*10)+line[i] - 48;
-		}
-		i++;
-	}
-	if(neg_flag)
-		y *= -1;
-	myfile.close();
+    string line;
+    int i = 0;
+    int neg_flag = 0;
+    ifstream myfile (coordpath.c_str());
+    if (myfile.is_open()) {
+        getline (myfile,line);
+        getline (myfile,line);
+        getline (myfile,line);
+    }
+    line.erase(line.begin() + 0, line.begin() + 17);
+    while(line[i] != ',') {
+        if(line[i] == '-') {
+            neg_flag = -1;
+        }
+        else {
+            x = (x*10)+(line[i] - 48);
+        }
+        i++;
+    }
+    if(neg_flag)
+        x *= -1;
+    i+=2;
+    neg_flag = 0;
+    while(line[i]) {
+        if(line[i] == '-') {
+            neg_flag = -1;
+        }
+        else {
+            y = (y*10)+line[i] - 48;
+        }
+        i++;
+    }
+    if(neg_flag)
+        y *= -1;
+    myfile.close();
+}
+
+
+/**  @function Erosion  */
+void Erosion(Mat& image)
+{ 
+  int erosion_elem = 0;
+  int erosion_size = 10;
+  int erosion_type;
+  if( erosion_elem == 0 ){ erosion_type = MORPH_RECT; }
+  else if( erosion_elem == 1 ){ erosion_type = MORPH_CROSS; }
+  else if( erosion_elem == 2) { erosion_type = MORPH_ELLIPSE; }
+
+  Mat element = getStructuringElement( erosion_type,
+                                       Size( 2*erosion_size + 1, 2*erosion_size+1 ),
+                                       Point( erosion_size, erosion_size ) );
+
+  /// Apply the erosion operation
+  erode( image, image, element );
+  //imshow( "Erosion Demo", image );
+  //waitKey(-1); 
+
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Name : read_map		                                                        
-// Return type : void	                                                        
-// Parameters : void						            		                
-// Function : Reads the map from the file map.png							 	
-// Return : N/A  																
-////////////////////////////////////////////////////////////////////////////////	
+// Name : read_map                                                              
+// Return type : void                                                           
+// Parameters : void                                                            
+// Function : Reads the map from the file map.png                               
+// Return : N/A                                                                 
+////////////////////////////////////////////////////////////////////////////////    
 void read_map() {
-	img = imread(mappath.c_str(), 0);
-	img.convertTo(img, CV_8U);
+    img = imread(mappath.c_str(), 0);
+    Erosion(img);
+    img.convertTo(img, CV_8U);
     for(int i = 0; i<2048;i++){
-    	for(int j = 0; j<2048; j++){
-    		m[i][j] = (int)img.at<uint8_t>(i,j);
-    	}
+        for(int j = 0; j<2048; j++){
+            m[i][j] = (int)img.at<uint8_t>(i,j);
+        }
     }
 }
 
@@ -121,77 +145,77 @@ void read_map() {
 /////////////////////////////////////////////////////////////////////////////////
 
 void DisplayPath(vector<vector<int>> path) {
-		for (int i = 0; i < path.size(); i ++){
-			m[path[i][0]][path[i][1]] = 150;
-		}
-		Mat dataMatrix1(2048,2048,CV_8UC1, m);
-		imshow( "Display window", dataMatrix1 );   // Show our image inside it.
-    	waitKey(-1); 
-    	for (int i = 0; i < path.size(); i ++){
-			m[path[i][0]][path[i][1]] = 255;
-		}
+        for (int i = 0; i < path.size(); i ++){
+            m[path[i][0]][path[i][1]] = 150;
+        }
+        Mat dataMatrix1(2048,2048,CV_8UC1, m);
+        imshow( "Display window", dataMatrix1 );   // Show our image inside it.
+        waitKey(-1); 
+        for (int i = 0; i < path.size(); i ++){
+            m[path[i][0]][path[i][1]] = 255;
+        }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Name : rot90		                                                        
-// Return type : void	                                                        
-// Parameters : int num (number of rotations)						            		                
-// Function : Rotates the map							 	
-// Return : N/A  																
-////////////////////////////////////////////////////////////////////////////////	
+// Name : rot90                                                             
+// Return type : void                                                           
+// Parameters : int num (number of rotations)                                                           
+// Function : Rotates the map                               
+// Return : N/A                                                                 
+////////////////////////////////////////////////////////////////////////////////    
 void rot90(int num) {
-	int temp;
-	for (int i = 0; i<num;i++) {
-		for (int n = 0; n< (2048 - 2); n++){
-			for(int l = n+1; l<(2048 - 1); l++){
-				temp = m[n][l];
-				m[n][l] = m[l][n];
-				m[l][n] = temp;
-			}
-		}
-	}
+    int temp;
+    for (int i = 0; i<num;i++) {
+        for (int n = 0; n< (2048 - 2); n++){
+            for(int l = n+1; l<(2048 - 1); l++){
+                temp = m[n][l];
+                m[n][l] = m[l][n];
+                m[l][n] = temp;
+            }
+        }
+    }
 }
-  	
+    
 ////////////////////////////////////////////////////////////////////////////////
-// Name : fliplr		                                                        
-// Return type : void	                                                        
-// Parameters : N/A						            		                
-// Function : flips the map horizontlly							 	
-// Return : N/A  																
-////////////////////////////////////////////////////////////////////////////////	
+// Name : fliplr                                                                
+// Return type : void                                                           
+// Parameters : N/A                                                         
+// Function : flips the map horizontlly                             
+// Return : N/A                                                                 
+////////////////////////////////////////////////////////////////////////////////    
 void fliplr() {
-	int temp;
-	for (int n = 0; n< (2048 ); n++){
-		for(int l = 0; l<(2048/2); l++){
-			temp = m[n][l];
-			m[n][l] = m[n][2048 - l];
-			m[n][2048 - l] = temp;
-		}
-	}
+    int temp;
+    for (int n = 0; n< (2048 ); n++){
+        for(int l = 0; l<(2048/2); l++){
+            temp = m[n][l];
+            m[n][l] = m[n][2048 - l];
+            m[n][2048 - l] = temp;
+        }
+    }
 }
   
 
 ////////////////////////////////////////////////////////////////////////////////
-//                          Function Definition									
+//                          Function Definition                                 
 //   Name  - Neighbors                                                          
-//   Function  - Finds the neighboring points around a given point in a grid.	
-//               Depending on the requirement, it is used for finding all the 	
-//               points between the high and low x, y distance. And it is also 	
-//               used to find a points for the search step. For 3, returns		
-//               every 10th neighbor to prevent over-crowding of branches.		
-//   Arguments  - int ch -> 1(low 3 and high 4) - Check if Valid move,				
-//                     2(low 1 and high 2) - Check for noise					
-//                     3(low 20 and high 21) - Only consider perimeter for jump	
-//                int ptx, int pty -> point of reference								
+//   Function  - Finds the neighboring points around a given point in a grid.   
+//               Depending on the requirement, it is used for finding all the   
+//               points between the high and low x, y distance. And it is also  
+//               used to find a points for the search step. For 3, returns      
+//               every 10th neighbor to prevent over-crowding of branches.      
+//   Arguments  - int ch -> 1(low 3 and high 4) - Check if Valid move,              
+//                     2(low 1 and high 2) - Check for noise                    
+//                     3(low 20 and high 21) - Only consider perimeter for jump 
+//                int ptx, int pty -> point of reference                                
 ////////////////////////////////////////////////////////////////////////////////
 
-	
+    
 int Neighbors(int ch , int ptx, int pty) {
-	nei.clear();
-	int low, high;
+    nei.clear();
+    int low, high;
     if (ch == 1) {
-	    low = 4;
-    	high = 5;
+        low = 2;
+        high = 3;
     }
     if (ch == 2) {
         low = 10;
@@ -199,63 +223,63 @@ int Neighbors(int ch , int ptx, int pty) {
     }
 
     if (ch == 3) {
-    	low = 15;
+        low = 15;
         high = 16;
         int thres = 13;
         for (int dx=-low; dx<=high; dx++)
-	  		for (int dy=-low; dy<=high; dy++) 
-			    if (dx || dy){
-			        int x = ptx+dx, y=pty+dy;
-	   		        if ((x >= 0) && (x < X) && (y >= 0) && (y < Y) && 
-	   		        	((abs(x-ptx)>thres) || (abs(y-pty)>thres))) {
-			            nei.push_back({x,y});
-		        }
-		    }
-	return 0;
-	}
+            for (int dy=-low; dy<=high; dy++) 
+                if (dx || dy){
+                    int x = ptx+dx, y=pty+dy;
+                    if ((x >= 0) && (x < X) && (y >= 0) && (y < Y) && 
+                        ((abs(x-ptx)>thres) || (abs(y-pty)>thres))) {
+                        nei.push_back({x,y});
+                }
+            }
+    return 0;
+    }
     if (ch == 4) {
         low = wallow;
         high = walhigh;
-	}
+    }
 
-	for (int dx=-low; dx<=high; dx++)
-  		for (int dy=-low; dy<=high; dy++) 
-		    if (dx || dy){
-		        int x = ptx+dx, y=pty+dy;
-   		        if (x >= 0 && x < X && y >= 0 && y < Y){
-		            nei.push_back({x,y});
+    for (int dx=-low; dx<=high; dx++)
+        for (int dy=-low; dy<=high; dy++) 
+            if (dx || dy){
+                int x = ptx+dx, y=pty+dy;
+                if (x >= 0 && x < X && y >= 0 && y < Y){
+                    nei.push_back({x,y});
 
-	        }
-	    }
-	return 0;
+            }
+        }
+    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//                          Function Definition									
-//   Name  - ExtendStarStopt													
+//                          Function Definition                                 
+//   Name  - ExtendStarStopt                                                    
 //   Function  - Extend the walls in the map to give enough moving room for the 
-//               Search algorithm. Done because Gazebo gives coordinates of		
-//               Start and Stop right next to the walls 						
-//   Arguments  - N/A 															
+//               Search algorithm. Done because Gazebo gives coordinates of     
+//               Start and Stop right next to the walls                         
+//   Arguments  - N/A                                                           
 ////////////////////////////////////////////////////////////////////////////////
 
 void ExtendStartStop() {
-    cout << "Extending start ..." << endl;
+    //cout << "Extending start ..." << endl;
     Neighbors(2,start[0],start[1]);
     for( int i = 0; i<nei.size(); i++)
-       	m[nei[i][0]][nei[i][1]] = mvp;
-    cout << "Extending stop ..." << endl;
- 	Neighbors(2,stop[0],stop[1]);
+        m[nei[i][0]][nei[i][1]] = mvp;
+    //cout << "Extending stop ..." << endl;
+    Neighbors(2,stop[0],stop[1]);
     for( int i = 0; i<nei.size(); i++)
-       	m[nei[i][0]][nei[i][1]] = mvp;
+        m[nei[i][0]][nei[i][1]] = mvp;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//                          Function Definition									
-//   Name  - ang 																
-//   Function  - Used to find angle between two lines 							
-//   Arguments  - vector<vector<int>> lineA, vector<vector<int>> lineB 													
+//                          Function Definition                                 
+//   Name  - ang                                                                
+//   Function  - Used to find angle between two lines                           
+//   Arguments  - vector<vector<int>> lineA, vector<vector<int>> lineB                                                  
 ////////////////////////////////////////////////////////////////////////////////
 
 double ang(vector<vector<int>> lineA, vector<vector<int>> lineB) {
@@ -289,21 +313,21 @@ double ang(vector<vector<int>> lineA, vector<vector<int>> lineB) {
     return ang_deg;
 }
 
-////////////////////////////////////////////////////////////////////////////////	
-//                          Function Definition 								
-//   Name  - get_line															
-//   Function  - Returns all the points in a grid that fall between two given	
-//               referrence points. 											
-//   Arguments  - int x1, int y1 -> (pt1), int x2, int y2 -> (pt2) 								
+////////////////////////////////////////////////////////////////////////////////    
+//                          Function Definition                                 
+//   Name  - get_line                                                           
+//   Function  - Returns all the points in a grid that fall between two given   
+//               referrence points.                                             
+//   Arguments  - int x1, int y1 -> (pt1), int x2, int y2 -> (pt2)                              
 ////////////////////////////////////////////////////////////////////////////////
 
 vector<vector<int>> get_line(int x1, int y1, int x2, int y2) {
     vector<vector<int>> points;
     bool issteep;
     if(abs(y2-y1) > abs(x2-x1))
-    	issteep = true;
+        issteep = true;
     else
-    	issteep = false;
+        issteep = false;
     if (issteep){
         int temp;
         temp = x1;
@@ -315,7 +339,7 @@ vector<vector<int>> get_line(int x1, int y1, int x2, int y2) {
     }
     bool rev = false;
     if (x1 > x2){
-    	int temp;
+        int temp;
         temp = x1;
         x1 = x2;
         x2 = temp;
@@ -340,7 +364,7 @@ vector<vector<int>> get_line(int x1, int y1, int x2, int y2) {
         }
         else if (count%4 == 0){
             points.push_back({x, y});
-		}
+        }
         error -= deltay;
         if (error < 0){
             y += ystep;
@@ -357,19 +381,19 @@ vector<vector<int>> get_line(int x1, int y1, int x2, int y2) {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//                          Function Definition									
-//   Name  - CheckValid															
-//   Function  - Checks if a move is valid between two given referrence points.	
+//                          Function Definition                                 
+//   Name  - CheckValid                                                         
+//   Function  - Checks if a move is valid between two given referrence points. 
 //               The condition is that the two points should not be non movable 
-//               points and every point between the two should have a buffer 	
-//               from the wall. The buffer if found using Neighbors with x = 1.	
-//               Returns 1 for valid move, and 0 for invalid move.				
-//   Arguments  - vector<int> pt1, vector<int> pt2														
+//               points and every point between the two should have a buffer    
+//               from the wall. The buffer if found using Neighbors with x = 1. 
+//               Returns 1 for valid move, and 0 for invalid move.              
+//   Arguments  - vector<int> pt1, vector<int> pt2                                                      
 ////////////////////////////////////////////////////////////////////////////////
 int CheckValid(vector<int> pt1, vector<int> pt2) {
-	vector<vector<int>> gline;
-	gline = get_line(pt1[0],pt1[1],pt2[0],pt2[1]);
-    for(int i = 0;i<gline.size();i++){
+    vector<vector<int>> gline;
+    gline = get_line(pt1[0],pt1[1],pt2[0],pt2[1]);
+    for(int i = 0;i<gline.size();i+=6){
         if ((int)m[gline[i][0]][gline[i][1]] == nmvp){
             return 0;}
         Neighbors(1,gline[i][0],gline[i][1]);
@@ -383,32 +407,26 @@ int CheckValid(vector<int> pt1, vector<int> pt2) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//                          Function Definition									
-//   Name  - CutNeighbors														
-//   Function  - Returns Valid movable points from neighbors   					
+//                          Function Definition                                 
+//   Name  - CutNeighbors                                                       
+//   Function  - Returns Valid movable points from neighbors                    
 //   Arguments  - pair<int,int> pt(point of referrence), map<pair<int,int>, 
-//				  vector<vector<int>>> sD(Dictionary of the branches of the other tree.), 
-//				  pair<int,int> ap(Previos point for reference)												
+//                vector<vector<int>>> sD(Dictionary of the branches of the other tree.), 
+//                pair<int,int> ap(Previous point for reference)                                                
 ////////////////////////////////////////////////////////////////////////////////
     
-vector<vector<int>> CutNeighbors(pair<int,int> pos, vector<pair<int,int>> sD, pair<int,int> ap) {
+vector<vector<int>> CutNeighbors(pair<int,int> pos, pair<int,int> ap) {
     vector<vector<int>> nv;
-    int i;
     vector<vector<int>> neiC = nei;
-    for (i = 0; i < neiC.size(); i++) {
-    	vector<vector<int>> lineA = {{ap.first, ap.second},{pos.first, pos.second}};
-		vector<vector<int>> lineB = {{pos.first, pos.second},{neiC[i][0],neiC[i][1]}};
-		int f = neiC[i][0];
-		int s = neiC[i][1];
-		int it = -1;
-		for (int k = 0; k<sD.size(); k++){
-			if((sD[k].first == f) && (sD[k].second == s)){
-				it = k;
-				break;
-			}
-		}
+    for (int i = 0; i < neiC.size(); i++) {
+        vector<vector<int>> lineA = {{ap.first, ap.second},{pos.first, pos.second}};
+        vector<vector<int>> lineB = {{pos.first, pos.second},{neiC[i][0],neiC[i][1]}};
+        int it = -1;
+        if((int)m[neiC[i][0]][neiC[i][1]] != mvp){
+            it = 0;
+        }
         if ((CheckValid({pos.first, pos.second},neiC[i]) == 1) && 
-        (ang(lineA,lineB) <=90.0 )&&
+        (ang(lineA,lineB) <=45.0 )&&
         (it == -1))
             nv.push_back({neiC[i][0], neiC[i][1]}); 
     }
@@ -426,9 +444,9 @@ vector<vector<int>> CutNeighbors(pair<int,int> pos, vector<pair<int,int>> sD, pa
 vector<vector<int>> LineComp(vector<vector<int>> Line) {
     vector<vector<int>> NewLine, gline; 
     for (int i = 0; i<Line.size()-1; i++){
-    	gline = get_line(Line[i][0],Line[i][1],Line[i+1][0],Line[i+1][1]);
-    	for (int j = 0; j<gline.size()-1; j++){
-        	NewLine.push_back({gline[j][0],gline[j][1]});
+        gline = get_line(Line[i][0],Line[i][1],Line[i+1][0],Line[i+1][1]);
+        for (int j = 0; j<gline.size()-1; j++){
+            NewLine.push_back({gline[j][0],gline[j][1]});
         }
     }
     return NewLine;
@@ -450,33 +468,33 @@ vector<vector<int>> LineOptimization(vector<vector<int>> Line1) {
     vector<vector<int>> Line2;
     int pt1 = 0;
     int pt2 = Line1.size()-1;
-    cout <<"Length of path Before = " << Line1.size() << endl;
+    //cout <<"Length of path Before = " << Line1.size() << endl;
     
     // Line Optimization //
     while (pt1<(Line1.size()-1) && pt2>pt1) {
         while ((CheckValid(Line1[pt1],Line1[pt2]) != 1) && 
         (pt2 >pt1)){
-        	pt2 -=1;
+            pt2 -=1;
         }
         Line2.push_back(Line1[pt1]);
         pt1 = pt2+1;
         pt2 = Line1.size()-1;
     }
     Line2.push_back(Line1[Line1.size()-1]);
-    cout << "Useful points = " << Line2.size() << endl;
+    //cout << "Useful points = " << Line2.size() << endl;
     Line2 = LineComp(Line2);
-    cout << "Length of path After = " << Line2.size() << endl;
+    //cout << "Length of path After = " << Line2.size() << endl;
     vector<vector<int>> Line3;
     pt2 = 0;
     pt1 = Line2.size()-1;
-    cout <<"Length of path Before(reverse) = " << Line2.size() << endl;
+    //cout <<"Length of path Before(reverse) = " << Line2.size() << endl;
     
     // Line Optimization //
     while ((pt1 > 0) && (pt1>pt2)) {
         while ((CheckValid(Line2[pt2],Line2[pt1]) != 1) && 
         (pt1 > pt2)){
-        	//cout << (CheckValid(Line2[pt2],Line2[pt1])) << " " << Line2[pt2][0] << " " << Line2[pt2][1]<< " " << Line2[pt1][0]<< " " << Line2[pt1][1]<< endl; 
-        	pt2 +=1;
+            //cout << (CheckValid(Line2[pt2],Line2[pt1])) << " " << Line2[pt2][0] << " " << Line2[pt2][1]<< " " << Line2[pt1][0]<< " " << Line2[pt1][1]<< endl; 
+            pt2 +=1;
         }
         //cout << "\n"<< Line2[pt1][0] << " " <<Line2[pt1][1] << "\n\n"; 
         Line3.push_back(Line2[pt1]);
@@ -484,9 +502,9 @@ vector<vector<int>> LineOptimization(vector<vector<int>> Line1) {
         pt2 = 0;
     }
     Line3.push_back(Line2[0]);
-    cout << "Useful points(reverse) = " << Line3.size() << endl;
+    //cout << "Useful points(reverse) = " << Line3.size() << endl;
     Line3 = LineComp(Line3);
-    cout << "Length of path After(reverse) = " << Line3.size() << endl;
+    //cout << "Length of path After(reverse) = " << Line3.size() << endl;
     return Line3;
 }
 
@@ -516,10 +534,10 @@ vector<idmap> AngleDef(vector<vector<int>> Line){
     vector<vector<int>> AF = LineComp(Line);
     vector<int> temp;
     for (int i = 1; i<Line.size() - 1; i++){
-    	vector<vector<int>> lineA = {{Line[i-1][0], Line[i-1][1]},{Line[i][0], Line[i][1]}};
-		vector<vector<int>> lineB = {{Line[i][0],Line[i][1]},{Line[i+1][0], Line[i+1][1]}};
-    	temp = {Line[i][0], Line[i][1]};
-    	int it = distance(AF.begin(), find(AF.begin(), AF.end(), temp));
+        vector<vector<int>> lineA = {{Line[i-1][0], Line[i-1][1]},{Line[i][0], Line[i][1]}};
+        vector<vector<int>> lineB = {{Line[i][0],Line[i][1]},{Line[i+1][0], Line[i+1][1]}};
+        temp = {Line[i][0], Line[i][1]};
+        int it = distance(AF.begin(), find(AF.begin(), AF.end(), temp));
         temp2.pos = it;
         temp2.Value = ang({Line[i-1],Line[i]},{Line[i],Line[i+1]});
         anglist.push_back(temp2);
@@ -575,147 +593,150 @@ vector<double> SpeedList(vector<vector<int>> Line, vector<idmap> angleList) {
 }
 
 int main() {
-	vector<vector<int>> gline;
-	read_coord(x,y);
-	stop[0] = (x+1024);
-	stop[1] = (y+1024);
-	cout<<"Coordinates Read "<<stop[0] << " " << stop[1] <<" "<< start[0]<<" "<<start[1] <<endl;
-	read_map();
-	cout<<"Map Read"<<endl;
-	rot90(3);
-	cout<<"Map Orientation set"<<endl;
-	ExtendStartStop();
-	int ErrorFree = 0;
-	int st_line = 0;
-	vector<vector<int>> LineFinal;
-	clock_t search_start;
-	while (ErrorFree == 0) {
-		try {
+    vector<vector<int>> gline;
+    read_coord(x,y);
+    stop[0] = (x+1024);
+    stop[1] = (y+1024);
+    //cout<<"Coordinates Read "<<stop[0] << " " << stop[1] <<" "<< start[0]<<" "<<start[1] <<endl;
+    read_map();
+    //cout<<"Map Read"<<endl;
+    rot90(3);
+    //cout<<"Map Orientation set"<<endl;
+    ExtendStartStop();
+    int ErrorFree = 0;
+    int st_line = 0;
+    vector<vector<int>> LineFinal;
+    clock_t search_start;
+    while (ErrorFree == 0) {
+        try {
 
-			// Variable declerations for the Search tree that will begin from START
-			map <pair<int,int>, vector<vector<int>>> SetTrees;
-			SetTrees[{start[0],start[1]}].push_back({start[0],start[1]});
-			pair<int,int> pos = {start[0],start[1]};
-			vector<pair<int,int>> SetDismissed;
-			SetDismissed.push_back({start[0],start[1]});
-			pair<int,int> AnglePrevRef = {start[0]-1, start[1]-1};
-			pair<int,int> prev;
-			Neighbors(3,start[0],start[1]);
+            // Variable declerations for the Search tree that will begin from START
+            map <pair<int,int>, vector<vector<int>>> SetTrees;
+            SetTrees[{start[0],start[1]}].push_back({start[0],start[1]});
+            pair<int,int> pos = {start[0],start[1]};
+            vector<pair<int,int>> SetDismissed;
+            SetDismissed.push_back({start[0],start[1]});
+            pair<int,int> AnglePrevRef = {start[0]-1, start[1]-1};
+            pair<int,int> prev;
+            Neighbors(3,start[0],start[1]);
 
-			// Variable declerations for the Search tree that will begin from STOP     
-			map <pair<int,int>, vector<vector<int>>> SetTreesopp;
-			SetTreesopp[{stop[0],stop[1]}].push_back({stop[0],stop[1]});
-			pair<int,int> posopp = {stop[0],stop[1]};
-			pair<int,int> AnglePrevRefopp = {stop[0]-1, stop[1]-1};
-			pair<int,int> prepre = {start[0]-1, start[1]-1};
+            // Variable declerations for the Search tree that will begin from STOP     
+            map <pair<int,int>, vector<vector<int>>> SetTreesopp;
+            SetTreesopp[{stop[0],stop[1]}].push_back({stop[0],stop[1]});
+            pair<int,int> posopp = {stop[0],stop[1]};
+            pair<int,int> AnglePrevRefopp = {stop[0]-1, stop[1]-1};
+            pair<int,int> prepre = {start[0]-1, start[1]-1};
 
-			// Variable Declaration for The final path 
-			LineFinal.clear();
-			vector<vector<int>> LineFinal2; 
-			int GoalFlag = 0 ;
-			LineFinal.push_back({start[0],start[1]});
-			cout << "Variables set "<<endl;
-			st_line = 0;
+            // Variable Declaration for The final path 
+            LineFinal.clear();
+            vector<vector<int>> LineFinal2; 
+            int GoalFlag = 0 ;
+            LineFinal.push_back({start[0],start[1]});
+            //cout << "Variables set "<<endl;
+            st_line = 0;
 
-			// Check if there is a direct path from START to STOP 
-			if (CheckValid(start,stop) == 1){
-			    GoalFlag = 1;   
-			    st_line = 1;
-			    cout<<"Direct Path Found" << endl;
-			
-			}
-			cout<<"Direct Path Checked" << endl;
-			search_start = clock();
-			Neighbors(3,start[0],start[1]);
-			cout<<"Starting Search" << endl;
-			while (GoalFlag == 0) {
-			    int finStep = 0;
-			    while (finStep == 0){
-			        vector<vector<int>> nV = CutNeighbors(pos,SetDismissed, AnglePrevRef); // nV(neighborsValid)
-			        int nF, rtemp; // nF(notFound)
-			        pair<int,int> nC; // nC(neighborChoice)
-			        if (nV.size() == 0){
-			            nF = 1;
-			        }
-			        else{
-			            nF = 0;
-			            srand(time(NULL));
-			            rtemp = rand() % nV.size();
-			            nC = {nV[rtemp][0], nV[rtemp][1]};
-			        }
-			        if (nF == 1){
-			            pos = {SetTrees[{AnglePrevRef}][SetTrees[{AnglePrevRef}].size()-1][0], SetTrees[{AnglePrevRef}][SetTrees[{AnglePrevRef}].size()-1][1]};
-			            AnglePrevRef = {SetTrees[AnglePrevRef][SetTrees[AnglePrevRef].size()-2][0], SetTrees[AnglePrevRef][SetTrees[AnglePrevRef].size()-2][1]};
-			        }
-			        else{
-			            cout << "[" << (double)(clock() - search_start)/1000000<<"] : " << "Searching ... " <<endl; // To enable time taken
-			            prepre = AnglePrevRef;
-			            SetDismissed.push_back(nC);
-			            vector<int> nCtemp = {nC.first, nC.second};
-			            int ret = CheckValid(nCtemp,stop); // Check for direct line of sight
-			            AnglePrevRef = pos;        
-			            if (ret == 1){ // There is direct line of sight
-			                cout << "Found Goal" << endl;
-			                GoalFlag = 1;
-			                finStep = 1;
+            // Check if there is a direct path from START to STOP 
+            if (CheckValid(start,stop) == 1){
+                GoalFlag = 1;   
+                st_line = 1;
+                //cout<<"Direct Path Found" << endl;
+                LineFinal.push_back({start[0],start[1]});
+            
+            }
+            //cout<<"Direct Path Checked" << endl;
+            search_start = clock();
+            Neighbors(3,start[0],start[1]);
+            //cout<<"Starting Search" << endl;
+            while (GoalFlag == 0) {
+                int finStep = 0;
+                while (finStep == 0){
+                    vector<vector<int>> nV = CutNeighbors(pos, AnglePrevRef); // nV(neighborsValid)
+                    int nF, rtemp; // nF(notFound)
+                    pair<int,int> nC; // nC(neighborChoice)
+                    if (nV.size() == 0){
+                        nF = 1;
+                    }
+                    else{
+                        nF = 0;
+                        srand(time(NULL));
+                        rtemp = rand() % nV.size();
+                        nC = {nV[rtemp][0], nV[rtemp][1]};
+                    }
+                    if (nF == 1){
+                        pos = {SetTrees[{AnglePrevRef}][SetTrees[{AnglePrevRef}].size()-1][0], SetTrees[{AnglePrevRef}][SetTrees[{AnglePrevRef}].size()-1][1]};
+                        AnglePrevRef = {SetTrees[AnglePrevRef][SetTrees[AnglePrevRef].size()-2][0], SetTrees[AnglePrevRef][SetTrees[AnglePrevRef].size()-2][1]};
+                    }
+                    else{
+                        //cout <<"Custom : - "<< "[" << (double)(clock() - search_start)/1000000<<"] : " << "Searching ... " <<endl; // To enable time taken
+                        prepre = AnglePrevRef;
+                        vector<int> nCtemp = {nC.first, nC.second};
+                        m[nCtemp[0]][nCtemp[1]] = 200;
+                        int ret = CheckValid(nCtemp,stop); // Check for direct line of sight
+                        AnglePrevRef = pos;        
+                        if (ret == 1){ // There is direct line of sight
+                            //cout << "Found Goal" << endl;
+                            GoalFlag = 1;
+                            finStep = 1;
 
-			                // Add point and line of sight branch to tree 
-			                SetTrees[nC] = SetTrees[pos];
-			                SetTrees[nC].push_back({nCtemp[0],nCtemp[1]});
+                            // Add point and line of sight branch to tree 
+                            SetTrees[nC] = SetTrees[pos];
+                            SetTrees[nC].push_back({nCtemp[0],nCtemp[1]});
 
-			                // copy final tree from START 
-			                for (int ii = 0; ii<SetTrees[nC].size(); ii++)
-			                    LineFinal.push_back(SetTrees[nC][ii]);
-			                   			            }
+                            // copy final tree from START 
+                            for (int ii = 0; ii<SetTrees[nC].size(); ii++)
+                                LineFinal.push_back(SetTrees[nC][ii]);
+                                                    }
 
-			            else{ // There is no direct line of sight
-			               
-			                // Add point to as a branch to START tree 
-			                SetTrees[nC] = SetTrees[pos];
-			                SetTrees[nC].push_back(nCtemp);
-			               
-			                // Choose next point to search from 
-			                pos = nC;
-			     		    Neighbors(3,pos.first,pos.second);
-			            }    
-		    		}
-		    	}
-		    }
-		ErrorFree = 1;
-		}
-	    catch(...){
-	        cout<< "Caught Error"<<endl;
-	        ErrorFree = 0 ;
-	    }
-	}
+                        else{ // There is no direct line of sight
+                           
+                            // Add point to as a branch to START tree 
+                            SetTrees[nC] = SetTrees[pos];
+                            SetTrees[nC].push_back(nCtemp);
+                           
+                            // Choose next point to search from 
+                            pos = nC;
+                            Neighbors(3,pos.first,pos.second);
+                        }    
+                    }
+                }
+            }
+        ErrorFree = 1;
+        }
+        catch(...){
+            //cout<< "Caught Error"<<endl;
+            ErrorFree = 0 ;
+        }
+    }
 
-	// Function calls for Final-Processing of Final Path //
-	LineFinal.push_back({stop[0],stop[1]});
+    // Function calls for Final-Processing of Final Path //
+    LineFinal.push_back({stop[0],stop[1]});
 
     // Try processing multiple times to see different results //
-	clock_t opt_start2 = clock();
-	vector<vector<int>>LF = LineComp(LineFinal);
-	vector<vector<int>> LF1;
-	if(!st_line){ 
-	    cout << "Starting Optimization" << endl;   
-	    cout << "Map - without optimization" << endl;
-	    LF1 = LineOptimization(LF);
-	    DisplayPath(LF1);
+    clock_t opt_start2 = clock();
+    vector<vector<int>>LF = LineComp(LineFinal);
+    //DisplayPath(LF);
+    vector<vector<int>> LF1;
+    if(!st_line){ 
+        //cout << "Starting Optimization" << endl;   
+        //cout << "Map - without optimization" << endl;
+        LF1 = LineOptimization(LF);
+        //DisplayPath(LF1);
 
-	}
-	cout << "Time taken:- " <<(double)(clock() - search_start)/1000000 << endl;
-	vector<idmap> angs = AngleDef(LF1);
-	vector<vector<double>> Path;
-	vector<double> speeds = SpeedList(LF1,angs);
+    }
+    //cout << "Time taken:- " <<(double)(clock() - search_start)/1000000 << endl;
+    vector<idmap> angs = AngleDef(LF1);
+    vector<vector<double>> Path;
+    vector<double> speeds = SpeedList(LF1,angs);
     ofstream myfile;
     myfile.open(outpath.c_str());
-	for (int i = 0; i<speeds.size(); i++) {
+    for (int i = 0; i<speeds.size(); i++) {
         Path.push_back({((LF1[i][0] - 1024.0)/scale) ,((LF1[i][1] - 1024.0)/scale)});
-       	//cout << speeds[i] << " " << Path[i][0] << " " << Path[i][1] << endl;
-       	myfile << Path[i][0] << "\n" << Path[i][1] << "\n" << speeds[i] << "\n";
+        //cout << speeds[i] << " " << Path[i][0] << " " << Path[i][1] << endl;
+        myfile << Path[i][0] << "\n" << Path[i][1] << "\n" << speeds[i] << "\n";
     }
     myfile.close();
-	return 0;
+    cout<<LF1.size();
+    return LF1.size();
 }
 
 
