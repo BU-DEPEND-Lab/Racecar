@@ -25,8 +25,8 @@ using namespace std;
 using namespace cv;
 struct passwd *pw = getpwuid(getuid());
 const string homedir = pw->pw_dir;
-string coordpath = homedir + "/Desktop/LooseFiles/output/coord.txt";
-string outpath = homedir + "/Desktop/LooseFiles/output/path.txt";
+string coordpath = homedir + "/Desktop/Path_planning/Generator/LooseFiles/Maps/coord";
+string outpath = homedir + "/Desktop/Path_planning/Generator/LooseFiles/Paths_Astar/path";
 vector<int> start = {(1024), (1024)};
 vector<int> stop = {(0), (0)};
 uint8_t m [2048][2048];
@@ -43,7 +43,7 @@ int walhigh = 3;
 int wallow = 2;
 Mat img;
 vector<vector<int>> nei;
-string mappath = homedir + "/Desktop/LooseFiles/output/map.png";
+string mappath = homedir + "/Desktop/Path_planning/Generator/LooseFiles/Maps/map";
 
 struct idmap
 {
@@ -122,9 +122,11 @@ void read_map() {
 
 void DisplayPath(vector<vector<int>> path) {
 		for (int i = 0; i < path.size(); i ++){
-			m[path[i][0]][path[i][1]] = 150;
+			m[path[i][0]][path[i][1]] = 50;
 		}
 		Mat dataMatrix1(2048,2048,CV_8UC1, m);
+        //namedWindow( "Display window", WINDOW_AUTOSIZE );
+        namedWindow("Display window",CV_WINDOW_NORMAL);
 		imshow( "Display window", dataMatrix1 );   // Show our image inside it.
     	waitKey(-1); 
     	for (int i = 0; i < path.size(); i ++){
@@ -190,12 +192,16 @@ int Neighbors(int ch , int ptx, int pty) {
 	nei.clear();
 	int low, high;
     if (ch == 1) {
-	    low = 2;
-    	high = 3;
+	    low = 1;
+    	high = 2;
     }
     if (ch == 2) {
         low = 10;
         high = 10;
+    }
+    if (ch == 5) {
+        low = 1;
+        high = 2;
     }
 
     if (ch == 3) {
@@ -240,11 +246,11 @@ int Neighbors(int ch , int ptx, int pty) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void ExtendStartStop() {
-    cout << "Extending start ..." << endl;
+    //cout << "Extending start ..." << endl;
     Neighbors(2,start[0],start[1]);
     for( int i = 0; i<nei.size(); i++)
        	m[nei[i][0]][nei[i][1]] = mvp;
-    cout << "Extending stop ..." << endl;
+    //cout << "Extending stop ..." << endl;
  	Neighbors(2,stop[0],stop[1]);
     for( int i = 0; i<nei.size(); i++)
        	m[nei[i][0]][nei[i][1]] = mvp;
@@ -301,9 +307,9 @@ vector<vector<int>> get_line(int x1, int y1, int x2, int y2) {
     vector<vector<int>> points;
     bool issteep;
     if(abs(y2-y1) > abs(x2-x1))
-    	issteep = true;
+        issteep = true;
     else
-    	issteep = false;
+        issteep = false;
     if (issteep){
         int temp;
         temp = x1;
@@ -315,7 +321,7 @@ vector<vector<int>> get_line(int x1, int y1, int x2, int y2) {
     }
     bool rev = false;
     if (x1 > x2){
-    	int temp;
+        int temp;
         temp = x1;
         x1 = x2;
         x2 = temp;
@@ -340,7 +346,7 @@ vector<vector<int>> get_line(int x1, int y1, int x2, int y2) {
         }
         else if (count%4 == 0){
             points.push_back({x, y});
-		}
+        }
         error -= deltay;
         if (error < 0){
             y += ystep;
@@ -369,7 +375,7 @@ vector<vector<int>> get_line(int x1, int y1, int x2, int y2) {
 int CheckValid(vector<int> pt1, vector<int> pt2) {
 	vector<vector<int>> gline;
 	gline = get_line(pt1[0],pt1[1],pt2[0],pt2[1]);
-    for(int i = 0;i<gline.size();i++){
+    for(int i = 0;i<gline.size();i+=6){
         if ((int)m[gline[i][0]][gline[i][1]] == nmvp){
             return 0;}
         Neighbors(1,gline[i][0],gline[i][1]);
@@ -450,7 +456,7 @@ vector<vector<int>> LineOptimization(vector<vector<int>> Line1) {
     vector<vector<int>> Line2;
     int pt1 = 0;
     int pt2 = Line1.size()-1;
-    cout <<"Length of path Before = " << Line1.size() << endl;
+    //cout <<"Length of path Before = " << Line1.size() << endl;
     
     // Line Optimization //
     while (pt1<(Line1.size()-1) && pt2>pt1) {
@@ -463,13 +469,13 @@ vector<vector<int>> LineOptimization(vector<vector<int>> Line1) {
         pt2 = Line1.size()-1;
     }
     Line2.push_back(Line1[Line1.size()-1]);
-    cout << "Useful points = " << Line2.size() << endl;
+    //cout << "Useful points = " << Line2.size() << endl;
     Line2 = LineComp(Line2);
-    cout << "Length of path After = " << Line2.size() << endl;
+    //cout << "Length of path After = " << Line2.size() << endl;
     vector<vector<int>> Line3;
     pt2 = 0;
     pt1 = Line2.size()-1;
-    cout <<"Length of path Before(reverse) = " << Line2.size() << endl;
+    //cout <<"Length of path Before(reverse) = " << Line2.size() << endl;
     
     // Line Optimization //
     while ((pt1 > 0) && (pt1>pt2)) {
@@ -484,9 +490,9 @@ vector<vector<int>> LineOptimization(vector<vector<int>> Line1) {
         pt2 = 0;
     }
     Line3.push_back(Line2[0]);
-    cout << "Useful points(reverse) = " << Line3.size() << endl;
+    //cout << "Useful points(reverse) = " << Line3.size() << endl;
     Line3 = LineComp(Line3);
-    cout << "Length of path After(reverse) = " << Line3.size() << endl;
+    //cout << "Length of path After(reverse) = " << Line3.size() << endl;
     return Line3;
 }
 
@@ -598,6 +604,7 @@ double Dist(vector<int> pt1, vector<int> pt2) {
     return(abs(pt1[0]-pt2[0]) + abs(pt1[1]-pt2[1]));
 }
 
+
 /////////////////////////////////////////////////////////////////////////////////
 //                          Function Definition
 //   Name  - Cost
@@ -607,16 +614,16 @@ double Dist(vector<int> pt1, vector<int> pt2) {
 
 double Cost(vector<int> pt1, vector<int> pt2) {
     vector<vector<int>> gline;
-    double cost = 0;
+    double cost = Heuristic(pt1,pt2);
     gline = get_line(pt1[0],pt1[1],pt2[0],pt2[1]);
     for(int i = 0;i<gline.size();i++){
         if ((int)m[gline[i][0]][gline[i][1]] == nmvp){
-            cost+=1000;
+            cost+=10000;
         }
-        Neighbors(1,gline[i][0],gline[i][1]);
+        Neighbors(5,gline[i][0],gline[i][1]);
         for(int j = 0;j<nei.size(); j++){
             if ((int)m[nei[j][0]][nei[j][1]] == nmvp){
-                cost+=100;
+                cost+=1000;
             }
         }
     }
@@ -648,11 +655,15 @@ vector<int> findMin(map<vector<int>, int> openSet) {
 
 vector<vector<int>> reconstruct_path(map<vector<int>, vector<int> >cameFrom, vector<int>current){
     vector<vector<int>> LineFinal;
+    vector<int> temp;
     LineFinal.push_back(current);
     map<vector<int>, vector<int> >::iterator it;
     it = cameFrom.find(current);
-    while(it != cameFrom.end()){
-        current = cameFrom[current];
+    while((it != cameFrom.end())) {
+        //cout << Dist(current, stop) << " " <<current[0] <<" " << current[1] << " " << cameFrom[current][0] << " " << cameFrom[current][1] << endl;
+        temp = cameFrom[current];
+        //cameFrom.erase(it);
+        current = temp;
         LineFinal.push_back(current);
         it = cameFrom.find(current);
     }
@@ -660,17 +671,21 @@ vector<vector<int>> reconstruct_path(map<vector<int>, vector<int> >cameFrom, vec
 
 }
 
-int main() {
-	cout << "Starting" <<homedir;
+int main(int argc, char** argv) {
+	//cout << "Starting" <<homedir;
+   	 string tempst = argv[1];
+    coordpath += (tempst+".txt");
+    outpath += (tempst+".txt");
+    mappath += (tempst+".png");
 	vector<vector<int>> gline;
 	read_coord(x,y);
 	stop[0] = (x+1024);
 	stop[1] = (y+1024);
-	cout<<"Coordinates Read "<<stop[0] << " " << stop[1] <<" "<< start[0]<<" "<<start[1] <<endl;
+	//cout<<"Coordinates Read "<<stop[0] << " " << stop[1] <<" "<< start[0]<<" "<<start[1] <<endl;
 	read_map();
-	cout<<"Map Read"<<endl;
+	//cout<<"Map Read"<<endl;
 	rot90(3);
-	cout<<"Map Orientation set"<<endl;
+	//cout<<"Map Orientation set"<<endl;
 	ExtendStartStop();
 	int ErrorFree = 0;
 	int st_line = 0;
@@ -686,45 +701,63 @@ int main() {
     openSet[start] = fScore[start];
     double tentative_gScore;
     search_start = clock();
+    //LineFinal.push_back(start);
     while(openSet.size()!=0){
-        cout << "OpenSet Size = " << openSet.size() << endl;
+	if(((double)(clock() - search_start)/1000000) > 600){
+		return 0;	
+	}
+        //cout << "OpenSet Size = " << openSet.size() << endl;
+        //cout << "ClosedSet Size = " << closedSet.size() << endl;
         current = findMin(openSet);
-        m[current[0]][current[1]] = 200;
-        Mat dataMatrix1(2048,2048,CV_8UC1, m);
-        imshow( "Display window", dataMatrix1 );
-        waitKey(30);
+        //cout << "Current " << current[0] << " " << current[1] << endl;
+        //m[current[0]][current[1]] = 200;
+        //Mat dataMatrix1(2048,2048,CV_8UC1, m);
+        //namedWindow( "Display window", CV_WINDOW_NORMAL);
+        //resizeWindow("Display Window", 2048,2048);
+        //imshow( "Display window", dataMatrix1 );
+        //waitKey(10);
         if (current == stop){
+            //cout << "Reached STOP";
             LineFinal = reconstruct_path(cameFrom, current);
             break;
         }
-        openSet.erase(current);
+        it = openSet.find(current);
+        openSet.erase(it);  
         closedSet[current] = 1;
+        //cout << "Erasing " << openSet[current] <<" " << closedSet[current]<< endl;
         Neighbors(1, current[0], current[1]);
+        //LineFinal.push_back(current);
         for(int i = 0; i< nei.size(); i++){
             it = closedSet.find(nei[i]);
-            if (it != closedSet.end())
-                continue;
-            it = openSet.find(nei[i]);
-            tentative_gScore = gScore[current]+Cost(current, nei[i]);
-            if(it == openSet.end())
-                openSet[nei[i]] = tentative_gScore + Heuristic(nei[i], stop);
-            if(tentative_gScore>=Dist(current, start))
-                continue;
-            cameFrom[nei[i]] = current;
-            gScore[nei[i]] = tentative_gScore;
-            fScore[nei[i]] = gScore[nei[i]] + Heuristic(nei[i], stop);
-            openSet[nei[i]] = fScore[nei[i]];
+            if (it == closedSet.end()){   
+                //cout << "Found " << nei[i][0] << " " << nei[i][1] << endl;           
+                it = openSet.find(nei[i]);
+                if(it == openSet.end()){
+                    openSet[nei[i]] = 100000;
+                    gScore[nei[i]] = 100000;
+                }
+                tentative_gScore = gScore[current]+Cost(current, nei[i]);
+                if(tentative_gScore < gScore[nei[i]]){
+                    cameFrom[nei[i]] = current;
+                    gScore[nei[i]] = tentative_gScore;
+                    fScore[nei[i]] = gScore[nei[i]] + Heuristic(nei[i], stop);
+                    openSet[nei[i]] = fScore[nei[i]];
+                }    
+            }
         }
     }
+    //LineFinal.push_back(stop);
 	clock_t opt_start2 = clock();
-	vector<vector<int>>LF = LineComp(LineFinal);
-	vector<vector<int>> LF1;
-    cout << "Starting Optimization" << endl;   
-	cout << "Map - without optimization" << endl;
-    DisplayPath(LF);
-	LF1 = LineOptimization(LF);
-	DisplayPath(LF1);
-	cout << "Time taken:- " <<(double)(clock() - search_start)/1000000 << endl;
+	vector<vector<int>>LF1 = LineFinal;
+    //cout<<LF1.size();
+	//vector<vector<int>> LF1;
+    //cout << "Starting Optimization" << endl;   
+	//cout << "Map - without optimization" << endl;
+    //DisplayPath(LF1);
+	//LF1 = LineOptimization(LF1);
+	//DisplayPath(LF1);
+	//cout << "Time taken:- " <<(double)(clock() - search_start)/1000000 << endl;
+
 	vector<idmap> angs = AngleDef(LF1);
 	vector<vector<double>> Path;
 	vector<double> speeds = SpeedList(LF1,angs);
@@ -736,9 +769,9 @@ int main() {
        	myfile << Path[i][0] << "\n" << Path[i][1] << "\n" << speeds[i] << "\n";
     }
     myfile.close();
-	return speeds.size();
+    cout<<LF1.size();
+	return LF1.size();
 
-return 0;
 }
 
 

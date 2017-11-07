@@ -26,8 +26,8 @@ using namespace std;
 using namespace cv;
 struct passwd *pw = getpwuid(getuid());
 const string homedir = pw->pw_dir;
-string coordpath = homedir + "/Desktop/LooseFiles/output/coord.txt";
-string outpath = homedir + "/Desktop/LooseFiles/output/path.txt";
+string coordpath = homedir + "/Desktop/Path_planning/Generator/LooseFiles/Maps/coord";
+string outpath = homedir + "/Desktop/Path_planning/Generator/LooseFiles/Paths_RRT/path";
 vector<int> start = {(1024), (1024)};
 vector<int> stop = {(0), (0)};
 uint8_t m [2048][2048];
@@ -45,7 +45,7 @@ int wallow = 2;
 int delta = 20;
 Mat img;
 vector<vector<int>> nei;
-string mappath = homedir + "/Desktop/LooseFiles/output/map.png";
+string mappath = homedir + "/Desktop/Path_planning/Generator/LooseFiles/Maps/map";
 
 struct idmap
 {
@@ -252,6 +252,17 @@ int Neighbors(int ch , int ptx, int pty) {
 	return 0;
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+//                          Function Definition
+//   Name  - Dist
+//   Function  - Returns Distance between two coordinates 
+//   Arguments  - int x1, int x2, int y1, int y2
+/////////////////////////////////////////////////////////////////////////////////
+
+double Dist(int x1, int x2, int y1, int y2) {
+
+    return(sqrt(((x1-x2)*(x1-x2)) + ((y1-y2)*(y1-y2))));
+}
 ////////////////////////////////////////////////////////////////////////////////
 //                          Function Definition									
 //   Name  - ExtendStarStopt													
@@ -420,16 +431,9 @@ vector<int> CheckGoalRRT(vector<int> pt1, vector<vector<vector<int>>> Tree) {
             pt2.clear();
             pt2.push_back(Tree[ii][jj][0]);
             pt2.push_back(Tree[ii][jj][1]);
-            gline = get_line(pt1[0],pt1[1],pt2[0],pt2[1]);
-            for(int i = 0;i<gline.size();i++){
-                if ((int)m[gline[i][0]][gline[i][1]] == nmvp){
-                    flag =1;
-                }
-                Neighbors(1,gline[i][0],gline[i][1]);
-                for(int j = 0;j<nei.size(); j++){
-                    if ((int)m[nei[j][0]][nei[j][1]] == nmvp){
-                        flag = 1;
-                    }
+            if(Dist(pt1[0],pt1[1],pt2[0],pt2[1]) > 20){
+                if(!CheckValid(pt1, pt2)){
+                    flag = 1;
                 }
             }
             if(flag == 0){
@@ -648,17 +652,7 @@ vector<vector<int>> RRTGridspace() {
     return GridCoord;
 }
 
-/////////////////////////////////////////////////////////////////////////////////
-//                          Function Definition
-//   Name  - Dist
-//   Function  - Returns Distance between two coordinates 
-//   Arguments  - int x1, int x2, int y1, int y2
-/////////////////////////////////////////////////////////////////////////////////
 
-double Dist(int x1, int x2, int y1, int y2) {
-
-    return(sqrt(((x1-x2)*(x1-x2)) + ((y1-y2)*(y1-y2))));
-}
 
 /////////////////////////////////////////////////////////////////////////////////
 //                          Function Definition
@@ -676,8 +670,12 @@ void DisplayTree(vector<vector<vector<int>>> Tree, int val) {
         waitKey(10); 
        }
 
-int main() {
-	//cout << "Starting" <<homedir;
+int main(int argc, char** argv) {
+    string tempst = argv[1];
+    coordpath += (tempst+".txt");
+    outpath += (tempst+".txt");
+    mappath += (tempst+".png");
+	//cout << "Starting" <<coordpath<<endl<<outpath<<endl<<mappath<<endl;
 	vector<vector<int>> gline, GridCoord;
 	read_coord(x,y);
 	stop[0] = (x+1024);
@@ -705,6 +703,9 @@ int main() {
     clock_t search_start;
     search_start = clock();
     while(Goal != 1){
+	if(((double)(clock() - search_start)/1000000) > 60000){
+		return 0;	
+	}
         //cout <<"RRT : - "<< "[" << (double)(clock() - search_start)/1000000<<"] : " << "Searching ... " <<endl; // To enable time taken
         srand(time(NULL));
         rtemp = rand() % GridCoord.size();
@@ -772,13 +773,13 @@ int main() {
                 LineFinal.push_back(pushvec2[ii]);
                 //cout<<LineFinal[ii][0] << " " <<LineFinal[ii][1] << endl;
             } 
-            DisplayPath(LineComp(LineFinal), 0);
-            Mat dataMatrix1(2048,2048,CV_8UC1, m);
-            imshow( "Display window", dataMatrix1 );
-            waitKey(-1);
+            //DisplayPath(LineComp(LineFinal), 0);
+            //Mat dataMatrix1(2048,2048,CV_8UC1, m);
+            //imshow( "Display window", dataMatrix1 );
+            //waitKey(-1);
 
         }
-        DisplayTree(startTree, 150);
+        //DisplayTree(startTree, 150);
         srand(time(NULL));
         rtemp = rand() % GridCoord.size();
         choice= GridCoord[rtemp];
@@ -845,13 +846,13 @@ int main() {
                 LineFinal.push_back(pushvec2[ii]);
                 //cout<<LineFinal[ii][0] << " " <<LineFinal[ii][1] << endl;
             } 
-            DisplayPath(LineComp(LineFinal), 0);
-            Mat dataMatrix1(2048,2048,CV_8UC1, m);
-            imshow( "Display window", dataMatrix1 );
-            waitKey(-1);
+            //DisplayPath(LineComp(LineFinal), 0);
+            //Mat dataMatrix1(2048,2048,CV_8UC1, m);
+            //imshow( "Display window", dataMatrix1 );
+            //waitKey(-1);
 
         }
-    DisplayTree(stopTree, 150);
+    //DisplayTree(stopTree, 150);
     }
     // Try processing multiple times to see different results //
 	vector<vector<int>>LF1 = LineComp(LineFinal);
@@ -860,10 +861,10 @@ int main() {
 	//cout << "Map - without optimization" << endl;
 	//LF1 = LineOptimization(LF);
     //cout << "Time taken:- " <<(double)(clock() - search_start)/1000000 << endl;
-    DisplayPath(LF1, 0);
-    Mat dataMatrix1(2048,2048,CV_8UC1, m);
-    imshow( "Display window", dataMatrix1 );
-    waitKey(-1);
+    //DisplayPath(LF1, 0);
+    //Mat dataMatrix1(2048,2048,CV_8UC1, m);
+    //imshow( "Display window", dataMatrix1 );
+    //waitKey(-1);
 	vector<idmap> angs = AngleDef(LF1);
 	vector<vector<double>> Path;
 	vector<double> speeds = SpeedList(LF1,angs);
