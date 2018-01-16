@@ -1,0 +1,98 @@
+opencv_lib : cmake_library {
+  PATH "/usr/local/share/OpenCV"
+  CMAKE_MODULE "OpenCV"
+  CMAKE_VAR_LIBRARIES "OpenCV_LIBS"
+  CMAKE_VAR_INCLUDE_DIRS "OpenCV_INCLUDE_DIRS"
+}
+
+settings : module_settings {
+  MODULE_BASE_PATH "src"
+}
+
+basic_rate : duration 50msec
+
+drive_param : topic {
+  FIELDS
+    velocity : float32 0
+		angle    : float32 0
+}
+
+distance : topic {
+	FIELDS
+		data: int32 -1 
+}
+
+key_topic : topic {
+  FIELDS
+    key : int16 0
+}
+
+PoseStamped : topic {
+	FIELDS
+		position_x: float64 0
+		position_y: float64 0
+		position_z: float64 0
+		orientation_x: float64 0
+		orientation_y: float64 0
+		orientation_z: float64 0
+		orientation_w: float64 0
+}
+
+pid_controller : node {
+  DEFS 
+    path_filename: string "/home/nvidia/catkin_ws/src/radlast_16_f1_tenth_cam_gpu/user_src/example.txt"
+    max_speed: float32 10
+    print_debug: bool false
+  PUBLISHES
+    drive_parameters { TOPIC drive_param }
+  SUBSCRIBES
+    key_input { TOPIC key_topic MAXLATENCY 1msec }  
+	  stop_sign_distance { TOPIC distance MAXLATENCY 1msec }
+    slam_out_pose { TOPIC PoseStamped MAXLATENCY 1msec }
+  PERIOD basic_rate
+  CXX { HEADER "pid_controller.h" FILENAME "pid_controller.cpp" CLASS "PidController"}
+}
+
+stopsign_detection : node {
+  DEFS 
+    cascade_filename: string "/home/nvidia/git/Racecar/sensor_perception/camera/stopsign_detection/data/stopsign_detector.xml"
+    display_camera: bool false 
+  PUBLISHES
+    stop_sign_distance { TOPIC distance }
+  PERIOD basic_rate
+  CXX { HEADER "stopsign_detection.h" FILENAME "stopsign_detection.cpp" CLASS "StopsignDetection" LIB opencv_lib}
+}
+
+key : node {
+  DEFS
+    print_debug: bool true
+  PUBLISHES
+    key_event { TOPIC key_topic }
+  PERIOD 10msec
+  CXX { HEADER "key.h" FILENAME "key.cpp" CLASS "Key" }  
+}
+
+controller_gateway : node {
+  PERIOD 10msec
+  PUBLISHES 
+    slam_out_pose { TOPIC PoseStamped }
+  SUBSCRIBES 
+    drive_parameters { TOPIC drive_param MAXLATENCY 10msec }
+  CXX { HEADER "controller_gateway.h" FILENAME "controller_gateway.cpp" CLASS "ControllerGateway" }
+}
+
+sys1 : linux {
+  NODES_UID 1000
+  IMG "linux.img"
+  IP 192.168.10.201
+  NODES
+    pid_controller
+    stopsign_detection
+    controller_gateway
+    key
+}
+
+plant : plant {
+  MACHINES
+    host_computer { OS sys1 }
+}
