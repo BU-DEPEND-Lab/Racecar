@@ -25,8 +25,8 @@ using namespace std;
 using namespace cv;
 struct passwd *pw = getpwuid(getuid());
 const string homedir = pw->pw_dir;
-string coordpath = homedir + "/Desktop/Path_planning/Generator/LooseFiles/Maps/coord";
-string outpath = homedir + "/Desktop/Path_planning/Generator/LooseFiles/Paths_Astar/path";
+string coordpath = homedir + "/Desktop/Akash/Path_planning/Generator/LooseFiles/Maps/coord";
+string outpath = homedir + "/Desktop/Akash/Path_planning/Generator/LooseFiles/Paths_Astar/path";
 vector<int> start = {(1024), (1024)};
 vector<int> stop = {(0), (0)};
 uint8_t m [2048][2048];
@@ -43,7 +43,7 @@ int walhigh = 3;
 int wallow = 2;
 Mat img;
 vector<vector<int>> nei;
-string mappath = homedir + "/Desktop/Path_planning/Generator/LooseFiles/Maps/map";
+string mappath = homedir + "/Desktop/Akash/Path_planning/Generator/LooseFiles/Maps/map";
 
 struct idmap
 {
@@ -96,6 +96,28 @@ void read_coord(int &x, int &y) {
 	myfile.close();
 }
 
+/**  @function Erosion  */
+void Erosion(Mat& image)
+{ 
+  int erosion_elem = 0;
+  int erosion_size = 10;
+  int erosion_type;
+  if( erosion_elem == 0 ){ erosion_type = MORPH_RECT; }
+  else if( erosion_elem == 1 ){ erosion_type = MORPH_CROSS; }
+  else if( erosion_elem == 2) { erosion_type = MORPH_ELLIPSE; }
+
+  Mat element = getStructuringElement( erosion_type,
+                                       Size( 2*erosion_size + 1, 2*erosion_size+1 ),
+                                       Point( erosion_size, erosion_size ) );
+
+  /// Apply the erosion operation
+  erode( image, image, element );
+  // imshow( "Erosion Demo", image );
+  // waitKey(-1); 
+
+
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Name : read_map		                                                        
 // Return type : void	                                                        
@@ -106,6 +128,7 @@ void read_coord(int &x, int &y) {
 void read_map() {
 	img = imread(mappath.c_str(), 0);
 	img.convertTo(img, CV_8U);
+    Erosion(img);
     for(int i = 0; i<2048;i++){
     	for(int j = 0; j<2048; j++){
     		m[i][j] = (int)img.at<uint8_t>(i,j);
@@ -192,8 +215,8 @@ int Neighbors(int ch , int ptx, int pty) {
 	nei.clear();
 	int low, high;
     if (ch == 1) {
-	    low = 1;
-    	high = 2;
+	    low = 4;
+    	high = 5;
     }
     if (ch == 2) {
         low = 10;
@@ -375,14 +398,9 @@ vector<vector<int>> get_line(int x1, int y1, int x2, int y2) {
 int CheckValid(vector<int> pt1, vector<int> pt2) {
 	vector<vector<int>> gline;
 	gline = get_line(pt1[0],pt1[1],pt2[0],pt2[1]);
-    for(int i = 0;i<gline.size();i+=6){
+    for(int i = 0;i<gline.size();i++){
         if ((int)m[gline[i][0]][gline[i][1]] == nmvp){
-            return 0;}
-        Neighbors(1,gline[i][0],gline[i][1]);
-        for(int j = 0;j<nei.size(); j++){
-            if ((int)m[nei[j][0]][nei[j][1]] == nmvp){
-                return 0;
-            }
+            return 0;
         }
     }
     return 1;
@@ -588,7 +606,6 @@ vector<double> SpeedList(vector<vector<int>> Line, vector<idmap> angleList) {
 /////////////////////////////////////////////////////////////////////////////////
 
 double Heuristic(vector<int> pt1, vector<int> pt2) {
-
     return(sqrt(((pt1[0]-pt2[0])*(pt1[0]-pt2[0])) + ((pt1[1]-pt2[1])*(pt1[1]-pt2[1]))));
 }
 
@@ -600,7 +617,6 @@ double Heuristic(vector<int> pt1, vector<int> pt2) {
 /////////////////////////////////////////////////////////////////////////////////
 
 double Dist(vector<int> pt1, vector<int> pt2) {
-
     return(abs(pt1[0]-pt2[0]) + abs(pt1[1]-pt2[1]));
 }
 
@@ -614,16 +630,16 @@ double Dist(vector<int> pt1, vector<int> pt2) {
 
 double Cost(vector<int> pt1, vector<int> pt2) {
     vector<vector<int>> gline;
-    double cost = Heuristic(pt1,pt2);
+    double cost = 2;
     gline = get_line(pt1[0],pt1[1],pt2[0],pt2[1]);
     for(int i = 0;i<gline.size();i++){
         if ((int)m[gline[i][0]][gline[i][1]] == nmvp){
-            cost+=10000;
+            cost+=1000;
         }
         Neighbors(5,gline[i][0],gline[i][1]);
         for(int j = 0;j<nei.size(); j++){
             if ((int)m[nei[j][0]][nei[j][1]] == nmvp){
-                cost+=1000;
+                cost+=100;
             }
         }
     }
@@ -673,7 +689,7 @@ vector<vector<int>> reconstruct_path(map<vector<int>, vector<int> >cameFrom, vec
 
 int main(int argc, char** argv) {
 	//cout << "Starting" <<homedir;
-   	 string tempst = argv[1];
+   	string tempst = argv[1];
     coordpath += (tempst+".txt");
     outpath += (tempst+".txt");
     mappath += (tempst+".png");
@@ -681,7 +697,7 @@ int main(int argc, char** argv) {
 	read_coord(x,y);
 	stop[0] = (x+1024);
 	stop[1] = (y+1024);
-	//cout<<"Coordinates Read "<<stop[0] << " " << stop[1] <<" "<< start[0]<<" "<<start[1] <<endl;
+	// cout<<"Coordinates Read "<<stop[0] << " " << stop[1] <<" "<< start[0]<<" "<<start[1] <<endl;
 	read_map();
 	//cout<<"Map Read"<<endl;
 	rot90(3);
@@ -709,13 +725,13 @@ int main(int argc, char** argv) {
         //cout << "OpenSet Size = " << openSet.size() << endl;
         //cout << "ClosedSet Size = " << closedSet.size() << endl;
         current = findMin(openSet);
-        //cout << "Current " << current[0] << " " << current[1] << endl;
-        //m[current[0]][current[1]] = 200;
-        //Mat dataMatrix1(2048,2048,CV_8UC1, m);
-        //namedWindow( "Display window", CV_WINDOW_NORMAL);
-        //resizeWindow("Display Window", 2048,2048);
-        //imshow( "Display window", dataMatrix1 );
-        //waitKey(10);
+        // cout << "Current " << current[0] << " " << current[1] << endl;
+        m[current[0]][current[1]] = 50;
+        // Mat dataMatrix1(2048,2048,CV_8UC1, m);
+        // namedWindow( "Display window", CV_WINDOW_NORMAL);
+        // resizeWindow("Display Window", 2048,2048);
+        // imshow( "Display window", dataMatrix1 );
+        // waitKey(10);
         if (current == stop){
             //cout << "Reached STOP";
             LineFinal = reconstruct_path(cameFrom, current);
@@ -749,14 +765,14 @@ int main(int argc, char** argv) {
     //LineFinal.push_back(stop);
 	clock_t opt_start2 = clock();
 	vector<vector<int>>LF1 = LineFinal;
-    //cout<<LF1.size();
-	//vector<vector<int>> LF1;
-    //cout << "Starting Optimization" << endl;   
-	//cout << "Map - without optimization" << endl;
-    //DisplayPath(LF1);
-	//LF1 = LineOptimization(LF1);
-	//DisplayPath(LF1);
-	//cout << "Time taken:- " <<(double)(clock() - search_start)/1000000 << endl;
+ //    cout<<LF1.size();
+	// vector<vector<int>> LF1;
+ //    cout << "Starting Optimization" << endl;   
+	// cout << "Map - without optimization" << endl;
+    // DisplayPath(LF1);
+	LF1 = LineOptimization(LF1);
+	// DisplayPath(LF1);
+	// cout << "Time taken:- " <<(double)(clock() - search_start)/1000000 << endl;
 
 	vector<idmap> angs = AngleDef(LF1);
 	vector<vector<double>> Path;

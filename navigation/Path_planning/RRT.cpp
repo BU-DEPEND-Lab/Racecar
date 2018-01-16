@@ -26,8 +26,8 @@ using namespace std;
 using namespace cv;
 struct passwd *pw = getpwuid(getuid());
 const string homedir = pw->pw_dir;
-string coordpath = homedir + "/Desktop/Path_planning/Generator/LooseFiles/Maps/coord";
-string outpath = homedir + "/Desktop/Path_planning/Generator/LooseFiles/Paths_RRT/path";
+string coordpath = homedir + "/Desktop/Akash/Path_planning/Generator/LooseFiles/Maps/coord";
+string outpath = homedir + "/Desktop/Akash/Path_planning/Generator/LooseFiles/Paths_RRT/path";
 vector<int> start = {(1024), (1024)};
 vector<int> stop = {(0), (0)};
 uint8_t m [2048][2048];
@@ -45,7 +45,7 @@ int wallow = 2;
 int delta = 20;
 Mat img;
 vector<vector<int>> nei;
-string mappath = homedir + "/Desktop/Path_planning/Generator/LooseFiles/Maps/map";
+string mappath = homedir + "/Desktop/Akash/Path_planning/Generator/LooseFiles/Maps/map";
 
 struct idmap
 {
@@ -405,12 +405,6 @@ int CheckValid(vector<int> pt1, vector<int> pt2) {
     for(int i = 0;i<gline.size();i++){
         if ((int)m[gline[i][0]][gline[i][1]] == nmvp){
             return 0;}
-        Neighbors(1,gline[i][0],gline[i][1]);
-        for(int j = 0;j<nei.size(); j++){
-            if ((int)m[nei[j][0]][nei[j][1]] == nmvp){
-                return 0;
-            }
-        }
     }
     return 1;
 }
@@ -666,8 +660,9 @@ void DisplayTree(vector<vector<vector<int>>> Tree, int val) {
             DisplayPath(LineComp(Tree[i]) , val);
             }
         Mat dataMatrix1(2048,2048,CV_8UC1, m);
+        namedWindow("Display window",CV_WINDOW_NORMAL);
         imshow( "Display window", dataMatrix1 );   // Show our image inside it.
-        waitKey(10); 
+        waitKey(-1); 
        }
 
 int main(int argc, char** argv) {
@@ -773,13 +768,14 @@ int main(int argc, char** argv) {
                 LineFinal.push_back(pushvec2[ii]);
                 //cout<<LineFinal[ii][0] << " " <<LineFinal[ii][1] << endl;
             } 
-            //DisplayPath(LineComp(LineFinal), 0);
-            //Mat dataMatrix1(2048,2048,CV_8UC1, m);
-            //imshow( "Display window", dataMatrix1 );
-            //waitKey(-1);
+            // DisplayPath(LineComp(LineFinal), 50);
+            // Mat dataMatrix1(2048,2048,CV_8UC1, m);
+            // namedWindow("Display window",CV_WINDOW_NORMAL);
+            // imshow( "Display window", dataMatrix1 );
+            // waitKey(-1);
 
         }
-        //DisplayTree(startTree, 150);
+        // DisplayTree(startTree, 150);
         srand(time(NULL));
         rtemp = rand() % GridCoord.size();
         choice= GridCoord[rtemp];
@@ -846,13 +842,14 @@ int main(int argc, char** argv) {
                 LineFinal.push_back(pushvec2[ii]);
                 //cout<<LineFinal[ii][0] << " " <<LineFinal[ii][1] << endl;
             } 
-            //DisplayPath(LineComp(LineFinal), 0);
-            //Mat dataMatrix1(2048,2048,CV_8UC1, m);
-            //imshow( "Display window", dataMatrix1 );
-            //waitKey(-1);
+            // DisplayPath(LineComp(LineFinal), 0);
+            // Mat dataMatrix1(2048,2048,CV_8UC1, m);
+            // namedWindow("Display window",CV_WINDOW_NORMAL);
+            // imshow( "Display window", dataMatrix1 );
+            // waitKey(-1);
 
         }
-    //DisplayTree(stopTree, 150);
+    // DisplayTree(stopTree, 150);
     }
     // Try processing multiple times to see different results //
 	vector<vector<int>>LF1 = LineComp(LineFinal);
@@ -861,10 +858,11 @@ int main(int argc, char** argv) {
 	//cout << "Map - without optimization" << endl;
 	//LF1 = LineOptimization(LF);
     //cout << "Time taken:- " <<(double)(clock() - search_start)/1000000 << endl;
-    //DisplayPath(LF1, 0);
-    //Mat dataMatrix1(2048,2048,CV_8UC1, m);
-    //imshow( "Display window", dataMatrix1 );
-    //waitKey(-1);
+    // DisplayPath(LF1, 0);
+    // Mat dataMatrix1(2048,2048,CV_8UC1, m);
+    // namedWindow("Display window",CV_WINDOW_NORMAL);
+    // imshow( "Display window", dataMatrix1 );
+    // waitKey(-1);
 	vector<idmap> angs = AngleDef(LF1);
 	vector<vector<double>> Path;
 	vector<double> speeds = SpeedList(LF1,angs);
