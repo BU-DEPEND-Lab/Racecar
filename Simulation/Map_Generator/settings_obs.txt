@@ -1,0 +1,7 @@
+Density: 0.08
+Path_width(meters): 1.5
+Gazebo_box_limit: 500
+Feature1: 3
+Feature2: 3
+Feature3: 2
+Feature4: 2
