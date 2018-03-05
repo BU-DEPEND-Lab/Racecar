@@ -16,5 +16,12 @@ effort_controllers
 $ cd ~/racecar && catkin_make
 
 ## Launch the simulator ##
-$ source ~/catkin_ws/devel/setup.bash
+$ source ~/racecar/devel/setup.bash
+$ roslaunch racecar_gazebo racecar_tunnel.launch
+or
 $ roslaunch racecar_gazebo racecar.launch
+
+
+## How to control ##
+A keyboard controller will pop-up
+Click the controller, control the car using W-A-S-D
