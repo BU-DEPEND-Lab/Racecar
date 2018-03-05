@@ -16,13 +16,13 @@ Follow the instructions provided by the F1tenth website - http://f1tenth.org/lec
 
 Next follow the following steps: -
 
-$ roscd hector_slam_launch/launch/
+	$ roscd hector_slam_launch/launch/
 
 Replace the tutorial.launch file with the one in Racecar/Robot/Custom_Files.
 
 If you want to replay a ros_bag or use the gazebo simulator, please change the parameter "/use_sim_time" to True in tutorial.launch.
 
-$ roscd hector_mapping/launch
+	$ roscd hector_mapping/launch
 
 Replace the mapping_defualt.launch file with the one in Racecar/Robot/Custom_Files.
 
@@ -58,7 +58,7 @@ With a built map in hand, execute the path planner. When prompted, give the desi
       $ cd ~/catkin_ws/src/race/src
       $ ./AHS
 
-      Once a path is found, this will be indicated on the display.
+Once a path is found, this will be indicated on the display.
 
 ### 3) Start the Radler gateway:
       $ cd ~/catkin_ws/devel/lib/pid_controller
@@ -86,23 +86,29 @@ zed-ros-wrapper folder is for driving the zed camera in ros. Just simply put it 
 
 ## Install Dependencies
 ackermann_msgs:
-	$ sudo apt-get install ros-<distro>-ackermann-msgs
+
+      $ sudo apt-get install ros-<distro>-ackermann-msgs
 serial:
-	$ sudo apt-get install ros-<distro>-serial
+
+      $ sudo apt-get install ros-<distro>-serial
 controller_manager:
-	$ sudo apt-get install ros-<distro>-controller-manager
+
+      $ sudo apt-get install ros-<distro>-controller-manager
 gazebo_ros_control:
-	$ sudo apt-get install ros-<distro>-gazebo-ros-control
+
+      $ sudo apt-get install ros-<distro>-gazebo-ros-control
 joint_state_controller:
-	$ sudo apt-get install ros-<distro>-joint-state-controller
+
+      $ sudo apt-get install ros-<distro>-joint-state-controller
 effort_controllers
-	$ sudo apt-get install ros-<distro>-effort-controllers
+
+      $ sudo apt-get install ros-<distro>-effort-controllers
 
 ## Build from sources 
-$ cd ~/racecar && catkin_make
+	$ cd ~/racecar && catkin_make
 
 ## Launch the simulator 
-$ source ~/catkin_ws/devel/setup.bash
-$ roslaunch racecar_gazebo racecar.launch
+	$ source ~/catkin_ws/devel/setup.bash
+	$ roslaunch racecar_gazebo racecar.launch
 
 For questions contact mzraghib@bu.edu
