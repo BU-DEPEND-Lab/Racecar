@@ -110,5 +110,3 @@ effort_controllers
 ## Launch the simulator 
 	$ source ~/catkin_ws/devel/setup.bash
 	$ roslaunch racecar_gazebo racecar.launch
-
-For questions contact mzraghib@bu.edu
