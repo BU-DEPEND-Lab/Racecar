@@ -31,34 +31,34 @@ Assume files are arranged as in directories.txt?????????
 /home/f1/radler/radler.sh --ws_dir /home/f1/catkin_ws/src compile pid_controller.radl --ROS
 
 
-###To compile the planner:
+### To compile the planner located in ????:
 
 	g++ -std=c++0x -ggdb `pkg-config --cflags opencv` -o `basename Planning_Gazebo_Customized.cpp .cpp` Planning_Gazebo_Customized.cpp `pkg-config --libs opencv`
 
 
-###To compile the pid controller:
+### To compile the pid controller:
 	catkin_make
 
 
 
-###modify pid_controller.cpp under:
+### modify pid_controller.cpp under:
 ~/catkin_ws/src/race/src/radler/pure_pursuit/src/pid_controller.cpp
 
-###the 'main' function for the radler system is under:
+### the 'main' function for the radler system is under:
 ~/catkin_ws/src/ros/pid_controller/src/radl__pid_controller.cpp
 
 
 
-###to compile map_generator.cpp
+### to compile map_generator.cpp
 
 g++ -std=c++0x -ggdb `pkg-config --cflags opencv` -o `basename map_generator.cpp .cpp` map_generator.cpp `pkg-config --libs opencv`
 
 ### to run the map_generator
-# args are line_l, line_w, joint_radius, num_joints, 15 joint angles
-# currently, include all 15 joint angles, even if num_joint < 15
+* args are line_l, line_w, joint_radius, num_joints, 15 joint angles
+* currently, include all 15 joint angles, even if num_joint < 15
 
 #e.g: 
-./map_generator  40 20 10 14 2 2 -2 2 2.5 -2.1 1 1.5 1.0 1.3 2.3 2.2 2.1 -1.5 -1.5
+``` ./map_generator  40 20 10 14 2 2 -2 2 2.5 -2.1 1 1.5 1.0 1.3 2.3 2.2 2.1 -1.5 -1.5```
 
 
 
@@ -76,7 +76,7 @@ uncomment the command for executing rviz
 
 
 
-## Usefule commands
+## Useful commands
 ``` /home/f1/radler/radler.sh --ws_dir /home/f1/catkin_ws/src compile pid_controller.radl --ROS ```
 
 
