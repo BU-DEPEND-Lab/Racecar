@@ -45,8 +45,7 @@ g++ -std=c++0x -ggdb `pkg-config --cflags opencv` -o `basename map_generator.cpp
 * args are line_l, line_w, joint_radius, num_joints, 15 joint angles
 * currently, include all 15 joint angles, even if num_joint < 15
 
-# e.g: 
-
+e.g: 
 ``` ./map_generator  40 20 10 14 2 2 -2 2 2.5 -2.1 1 1.5 1.0 1.3 2.3 2.2 2.1 -1.5 -1.5```
 
 
