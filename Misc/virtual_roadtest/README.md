@@ -1,6 +1,28 @@
 # VIRTUAL ROADTEST
 A Race track generating tool that uses a genetic algorithm-based approach to test the performance of steering controllers deployed on simulation models of DEPEND lab's F1/10th platform
 
+## Motivation
+Self driving
+
+## Requirements
+* OpenCV
+* All requirements mentioned for F1/10 simulation
+
+
+## Preparation
+
+
+## Usage
+Assume files are arranged as in directories.txt?????????
+
+* Execute the following: 
+
+``` ```
+
+
+
+
+
 
 ## Usefule commands
 ``` /home/f1/radler/radler.sh --ws_dir /home/f1/catkin_ws/src compile pid_controller.radl --ROS ```
@@ -12,11 +34,14 @@ A Race track generating tool that uses a genetic algorithm-based approach to tes
 
 
 * To compile the pid controller:
-	``` catkin_make ```
+
+``` catkin_make ```
 
 
 * modify pid_controller.cpp under:
+
 ``` ~/catkin_ws/src/race/src/radler/pure_pursuit/src/pid_controller.cpp ``` 
 
 * the 'main' function for the radler system is under:
+
 ``` ~/catkin_ws/src/ros/pid_controller/src/radl__pid_controller.cpp ```
