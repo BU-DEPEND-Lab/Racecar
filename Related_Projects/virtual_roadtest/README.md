@@ -8,6 +8,9 @@ In order to deploy self driving cars into public roads, the onboard controller w
 
 The virtual roadtest tool automates this testing process by generating multiple racetracks with incrementing difficulty with the objective to make the onboard controllers fail.
 
+![Screenshot](sample_track.png)
+
+
 For each test run, real time sensor data is collected to along with multiple other metrics such as completion time etc., for a fitness function that outputs a single fitness value from 0 to 1. The goal of this tool is to minimize the fitness value.
 
 This value is used to determine the most difficult race track among a population of race tracks. After a mutation process, a new population of race tracks is then generated. This process is repeated for a predefined number of 'generations' of the racetrack population.
