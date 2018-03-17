@@ -35,7 +35,7 @@ This value is used to determine the most difficult race track among a population
 
 ### To compile the planner:
 
-	g++ -std=c++0x -ggdb `pkg-config --cflags opencv` -o `basename Planning_Gazebo_Customized.cpp .cpp` Planning_Gazebo_Customized.cpp `pkg-config --libs opencv`
+``` g++ -std=c++0x -ggdb `pkg-config --cflags opencv` -o `basename Planning_Gazebo_Customized.cpp .cpp` Planning_Gazebo_Customized.cpp `pkg-config --libs opencv` ```
 
 
 ### To compile map_generator.cpp
@@ -45,7 +45,7 @@ This value is used to determine the most difficult race track among a population
 ### Start the tool
 After setting the populationSize, generations , mutationRate variables in 'genetic_alg.py', execute the following:
 
-	``` python genetic_alg.py ```
+``` python genetic_alg.py ```
 
 
 
