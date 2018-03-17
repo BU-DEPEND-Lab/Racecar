@@ -1,7 +1,0 @@
-Segment: 1
-Path_width(meters): 1.1
-Gazebo_box_limit: 500
-Feature1: 15
-Feature2: 0.5
-Feature3: 3
-Feature4: 2
