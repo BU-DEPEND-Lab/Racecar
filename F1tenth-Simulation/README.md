@@ -7,19 +7,14 @@ The F1tenth platform can be simulated using Gazebo.
 Once all the required installations have been performed, install the following:
 
 serial:
-
       ``` sudo apt-get install ros-<distro>-serial  ```
 controller_manager:
-
       ``` sudo apt-get install ros-<distro>-controller-manager  ```
 gazebo_ros_control:
-
        ``` sudo apt-get install ros-<distro>-gazebo-ros-control  ```
 joint_state_controller:
-
        ``` sudo apt-get install ros-<distro>-joint-state-controller  ```
 effort_controllers
-
        ``` sudo apt-get install ros-<distro>-effort-controllers  ```
 
 ## Build from sources 
