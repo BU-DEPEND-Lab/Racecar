@@ -1,7 +1,23 @@
 
 # F1tenth - Platform Setup for Field tests
 
-Once all the required installations have been performed, run the following commands to prepare the robot for autonomous control.
+* Replace SLAM launch files: -
+
+``` 
+roscd hector_slam_launch/launch/
+```
+
+Replace the tutorial.launch file with the one [here](https://github.com/BU-DEPEND-Lab/Racecar/tree/master/F1tenth-Field/launch_files).
+
+
+```
+roscd hector_mapping/launch
+```
+
+Replace the mapping_default.launch file with the one [here](https://github.com/BU-DEPEND-Lab/Racecar/tree/master/F1tenth-Field/launch_files).
+
+
+* Once all the required installations have been performed, run the following commands to prepare the robot for autonomous control.
 
 ### 1) Start the SLAM nodes:
 ```
