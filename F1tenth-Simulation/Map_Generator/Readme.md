@@ -13,13 +13,16 @@ run using 'java Generator'
 ## Rules for settings.txt
 
 Segment ->
+
 1- Long-winding road 
+
 	*Feature1 -> Number of turns
 	
 	*Feature2 -> complexity(0.05 - 0.95)
 	
 	
 2- Grid-space
+
 	*Feature1 -> Number of Rows and columns
 	
 	*Feature2 -> corrlidor length(0-1)
@@ -29,6 +32,7 @@ Segment ->
 	*Feature4 -> End point Y coordinate in gridspace
 
 3- Square Box
+
 	*Feature1 -> length(0-4)
 	
 	*Feature2 -> height(0-4)
@@ -43,6 +47,7 @@ Segment ->
 		    
 
 4- Triangle
+
 	*Feature1 -> angle1
 	
 	*Feature2 -> angle2
@@ -51,6 +56,7 @@ Segment ->
 	
 
 5- Circle
+
 	*Feature1 -> Radius
 	
 	*Feature2 -> **0 - Origin at center
@@ -58,6 +64,7 @@ Segment ->
 		    **1 - Origin at perimeter
 
 6- Curves
+
 	*Feature1 -> **0 - Sin (Phase Shifted by PI)
 	
 		    **1 - 2 connected SemiCircles
