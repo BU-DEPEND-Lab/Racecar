@@ -4,7 +4,7 @@ The F1tenth platform can be simulated using Gazebo.
 
 ## Install Dependencies
 
-Once all the required installations have been performed, install the following:
+* Once all the required installations have been performed, install the following:
 
 serial:
 
@@ -32,7 +32,7 @@ effort_controllers
 sudo apt-get install ros-<distro>-effort-controllers
 ```
 
-Next follow the following steps: -
+* Replace SLAM launch files: -
 
 ``` 
 roscd hector_slam_launch/launch/
