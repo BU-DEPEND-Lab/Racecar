@@ -30,6 +30,22 @@ effort_controllers
 ``` sudo apt-get install ros-<distro>-effort-controllers
 ```
 
+Next follow the following steps: -
+
+``` 
+roscd hector_slam_launch/launch/
+```
+
+Replace the tutorial.launch file with the one [here](https://github.com/BU-DEPEND-Lab/Racecar/tree/master/F1tenth-Simulation/launch_files).
+
+If you want to replay a ros_bag or use the gazebo simulator, change the parameter "/use_sim_time" to True in tutorial.launch.
+
+```
+roscd hector_mapping/launch
+```
+
+Replace the mapping_default.launch file with the one [here](https://github.com/BU-DEPEND-Lab/Racecar/tree/master/F1tenth-Simulation/launch_files).
+
 ## Build from sources 
 ``` cd ~/racecar && catkin_make
 ```
