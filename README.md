@@ -41,7 +41,7 @@ roscd hector_mapping/launch
 
 For Field Tests, replace the mapping_default.launch file with the one [here](https://github.com/BU-DEPEND-Lab/Racecar/tree/master/F1tenth-Field/launch_files).
 
-For simulations, replace the tutorial.launch file with the one [here](https://github.com/BU-DEPEND-Lab/Racecar/tree/master/F1tenth-Simulation/launch_files).
+For simulations, replace the mapping_default.launch file with the one [here](https://github.com/BU-DEPEND-Lab/Racecar/tree/master/F1tenth-Simulation/launch_files).
 
 
 ### 3) Install Radler
@@ -50,7 +50,7 @@ Follow the steps provided in https://sri-csl.github.io/radler/
 
 ### 4) Create a new ROS package
 
-Add all the src files from Racecar/Robot to a new package. The provided instructions below assume the package to be named 'race'.
+Add all the src files from Racecar/Robot to a new package. The provided instructions below assume the package to be named 'race' with src files in /race/src/
 
 ## BRASS demo (Deprecated)
 Since there isn't GPS in the F1_tenth system, we have to modified the ekf node in order to make it work with our system. The modified code is in the folder modified_from_brass.
