@@ -49,13 +49,16 @@ roscd hector_mapping/launch
 Replace the mapping_default.launch file with the one [here](https://github.com/BU-DEPEND-Lab/Racecar/tree/master/F1tenth-Simulation/launch_files).
 
 ## Build from sources 
-``` cd ~/racecar && catkin_make
+``` 
+cd ~/racecar && catkin_make
 ```
 
 ## Launch the simulator 
-``` source ~/catkin_ws/devel/setup.bash 
+``` 
+source ~/catkin_ws/devel/setup.bash 
 ```
-``` roslaunch racecar_gazebo racecar.launch
+``` 
+roslaunch racecar_gazebo racecar.launch
 ```
 	 
 ## Virtual Field Test
