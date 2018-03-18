@@ -25,11 +25,10 @@ rosrun race joystick.py
 Choose one of the above methods and manually maneuver the car in an environment (room, corridor etc.) to build the map. Upon completion, Stop(CTRL+C) the chosen manual control node.
 
 ### 2) Launch the AHS path planner:
+Copy the AHS.cpp file from [here](https://github.com/BU-DEPEND-Lab/Racecar/tree/master/F1tenth-Field/Path_planning) in ~/catkin_ws/src/race/src and compile using the provided bash script.
 
 With a built map in hand, execute the path planner. When prompted, give the desired coordinates you want the robot to move to. 
-``` 
-cd ~/catkin_ws/src/race/src
-```
+
 ``` 
 ./AHS 
 ```
