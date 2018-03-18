@@ -4,7 +4,7 @@
 
 This is the repo for the BU F1tenth team - http://sites.bu.edu/depend/bu-f110/
 
-Demo video - https://www.youtube.com/watch?v=kTw-X1VolPk
+Short demo video of the F1tenth platform in the field and in simulation - https://www.youtube.com/watch?v=kTw-X1VolPk
 
 ## Installations
 
