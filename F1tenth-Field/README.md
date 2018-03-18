@@ -1,5 +1,5 @@
 
-# F1tenth - Platform Setup for Field tests
+# F1tenth - Platform Setup for Field Tests
 
 
 Once all the required installations have been performed, run the following commands to prepare the robot for autonomous control.
