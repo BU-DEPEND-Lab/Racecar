@@ -1,5 +1,7 @@
 # Racecar
 
+<img src="http://sites.bu.edu/depend/files/2017/02/f1tenth-636x502.png" width="300">
+
 This is the repo for the BU F1tenth team - http://sites.bu.edu/depend/bu-f110/
 
 Demo video - https://www.youtube.com/watch?v=kTw-X1VolPk
