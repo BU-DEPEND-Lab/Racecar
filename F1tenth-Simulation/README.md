@@ -23,11 +23,13 @@ sudo apt-get install ros-<distro>-gazebo-ros-control
 ```
 joint_state_controller:
 
-``` sudo apt-get install ros-<distro>-joint-state-controller 
+``` 
+sudo apt-get install ros-<distro>-joint-state-controller 
 ```
 effort_controllers
 
-``` sudo apt-get install ros-<distro>-effort-controllers
+``` 
+sudo apt-get install ros-<distro>-effort-controllers
 ```
 
 Next follow the following steps: -
