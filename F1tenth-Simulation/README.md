@@ -31,4 +31,4 @@ effort_controllers
 	 
 ## Virtual Field Test
 
-Perform the steps in [F1tenthField](https://github.com/BU-DEPEND-Lab/Racecar/tree/master/F1tenth-Field)
+Perform the steps in [F1tenth-Field](https://github.com/BU-DEPEND-Lab/Racecar/tree/master/F1tenth-Field)
