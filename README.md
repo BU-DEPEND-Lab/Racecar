@@ -6,9 +6,18 @@ Demo video - https://www.youtube.com/watch?v=kTw-X1VolPk
 
 ## Installations
 
+To perform field tests on the physical platform, perform the following installation steps 1 - 4 on the NVIDIA Jetson TK1 or TX1 and then continue [here](https://github.com/BU-DEPEND-Lab/Racecar/tree/master/F1tenth-Field)
+
+To perform tests in the robotics simulator 'Gazebo', perform the following installation steps 1 - 4 on a PC and then continue [here](https://github.com/BU-DEPEND-Lab/Racecar/tree/master/F1tenth-Simulation)
+
+The code has been tested on:
+* Ubuntu 16.04, Ros Kinetic, and Gazebo 7, for the TX1
+* Ubuntu 14.04, Ros Indigo, and Gazebo 2, for the TK1
+
 ### 1) Clone repo
 
 Start by cloning the GitHub repo. The required files can also be transferred to the TK1, via an SD card.
+
 
 ### 2) ROS installation and sensor integration
 
