@@ -61,6 +61,6 @@ source ~/catkin_ws/devel/setup.bash
 roslaunch racecar_gazebo racecar.launch
 ```
 	 
-## Virtual Field Test
+## Start the virtual field test
 
 Perform the steps in [F1tenth-Field](https://github.com/BU-DEPEND-Lab/Racecar/tree/master/F1tenth-Field)
