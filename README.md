@@ -16,13 +16,17 @@ Follow the instructions provided by the F1tenth website - http://f1tenth.org/lec
 
 Next follow the following steps: -
 
-	$ roscd hector_slam_launch/launch/
+``` 
+roscd hector_slam_launch/launch/
+```
 
 Replace the tutorial.launch file with the one in Racecar/Robot/Custom_Files.
 
 If you want to replay a ros_bag or use the gazebo simulator, please change the parameter "/use_sim_time" to True in tutorial.launch.
 
-	$ roscd hector_mapping/launch
+```
+roscd hector_mapping/launch
+```
 
 Replace the mapping_defualt.launch file with the one in Racecar/Robot/Custom_Files.
 
