@@ -4,9 +4,7 @@
 Once all the required installations have been performed, run the following commands to prepare the robot for autonomous control.
 
 ### 1) Start the SLAM nodes:
-      ``` 
-      roslaunch hector_slam_launch tutorial.launch
-      ```
+```roslaunch hector_slam_launch tutorial.launch ```
 
 The current setup does not consider a prebuilt SLAM configuration space (2D map of surroundings). Therefore this has to be built manually, which can be done in 2 ways:
 
