@@ -6,9 +6,9 @@ Demo video - https://www.youtube.com/watch?v=kTw-X1VolPk
 
 ## Installations
 
-To perform field tests on the physical platform, perform the following installation steps 1 - 4 on the NVIDIA Jetson TK1 or TX1 and then continue [here](https://github.com/BU-DEPEND-Lab/Racecar/tree/master/F1tenth-Field)
+To perform field tests on the physical platform, perform the following installation steps 1 - 4 on the NVIDIA Jetson TK1 or TX1 and then continue [here](https://github.com/BU-DEPEND-Lab/Racecar/tree/master/F1tenth-Field).
 
-To perform tests in the robotics simulator 'Gazebo', perform the following installation steps 1 - 4 on a PC and then continue [here](https://github.com/BU-DEPEND-Lab/Racecar/tree/master/F1tenth-Simulation)
+To perform tests in the robotics simulator 'Gazebo', perform the following installation steps 1 - 4 on a PC and then continue [here](https://github.com/BU-DEPEND-Lab/Racecar/tree/master/F1tenth-Simulation).
 
 The code has been tested on:
 * Ubuntu 16.04, Ros Kinetic, and Gazebo 7, for the TX1
@@ -23,21 +23,24 @@ Start by cloning the GitHub repo. The required files can also be transferred to 
 
 Follow the instructions provided by the F1tenth website - http://f1tenth.org/lectures
 
-Next follow the following steps: -
+Replace SLAM launch files: -
 
 ``` 
 roscd hector_slam_launch/launch/
 ```
 
-Replace the tutorial.launch file with the one in Racecar/Robot/Custom_Files.
+For Field Tests, replace the tutorial.launch file with the one [here](https://github.com/BU-DEPEND-Lab/Racecar/tree/master/F1tenth-Field/launch_files).
 
-If you want to replay a ros_bag or use the gazebo simulator, please change the parameter "/use_sim_time" to True in tutorial.launch.
+For simulations, replace the tutorial.launch file with the one [here](https://github.com/BU-DEPEND-Lab/Racecar/tree/master/F1tenth-Simulation/launch_files).
 
 ```
 roscd hector_mapping/launch
 ```
 
-Replace the mapping_defualt.launch file with the one in Racecar/Robot/Custom_Files.
+For Field Tests, replace the mapping_default.launch file with the one [here](https://github.com/BU-DEPEND-Lab/Racecar/tree/master/F1tenth-Field/launch_files).
+
+For simulations, replace the tutorial.launch file with the one [here](https://github.com/BU-DEPEND-Lab/Racecar/tree/master/F1tenth-Simulation/launch_files).
+
 
 ### 3) Install Radler
 
