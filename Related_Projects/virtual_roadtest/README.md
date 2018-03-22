@@ -65,7 +65,7 @@ sudo gedit tutorial.launch
 
 uncomment the command for executing rviz
 
-# conpile the controller
+# compile the controller
 
 ``` /home/f1/radler/radler.sh --ws_dir /home/f1/catkin_ws/src compile pid_controller.radl --ROS ```
 
