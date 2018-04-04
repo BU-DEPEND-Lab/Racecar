@@ -6,7 +6,7 @@ using namespace std;
 class ControllerGateway {
   private:
 	  ros::NodeHandle h;
-	  ros::Subscriber sub;
+	  ros::Subscriber pose_sub, vel_sub;
 	  ros::Publisher pub;
   public:
 	  ControllerGateway();

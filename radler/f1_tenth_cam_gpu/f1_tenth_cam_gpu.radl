@@ -38,6 +38,32 @@ PoseStamped : topic {
 		orientation_w: float64 0
 }
 
+cmd_vel : topic {
+  FIELDS
+    linear_x: float64 0
+    linear_y: float64 0
+    linear_z: float64 0
+    angular_x: float64 0
+    angular_y: float64 0
+    angular_z: float64 0
+}
+
+explorer : node {
+  DEFS
+    max_speed: float32 10
+    max_speed_b: float32 -10
+    print_debug: bool false
+  PUBLISHES
+    drive_parameters { TOPIC drive_param }
+  SUBSCRIBES
+    key_input { TOPIC key_topic MAXLATENCY 1msec }
+	  stop_sign_distance { TOPIC distance MAXLATENCY 1msec }
+    slam_out_pose { TOPIC PoseStamped MAXLATENCY 1msec }
+    nav_cmd_vel { TOPIC cmd_vel MAXLATENCY 100msec }
+  PERIOD basic_rate
+  CXX { HEADER "explorer.h" FILENAME "explorer.cpp" CLASS "Explorer"}
+}
+
 pid_controller : node {
   DEFS 
     path_filename: string "/home/nvidia/catkin_ws/src/radlast_16_f1_tenth_cam_gpu/user_src/example.txt"
@@ -73,11 +99,14 @@ key : node {
 }
 
 controller_gateway : node {
+  DEFS
+    print_debug: bool true
   PERIOD 10msec
   PUBLISHES 
     slam_out_pose { TOPIC PoseStamped }
+    nav_cmd_vel { TOPIC cmd_vel }
   SUBSCRIBES 
-    drive_parameters { TOPIC drive_param MAXLATENCY 10msec }
+    drive_parameters { TOPIC drive_param MAXLATENCY 1000msec }
   CXX { HEADER "controller_gateway.h" FILENAME "controller_gateway.cpp" CLASS "ControllerGateway" }
 }
 
