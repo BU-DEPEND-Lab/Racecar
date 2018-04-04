@@ -1,3 +1,0 @@
-version 2
-built for SDF 1.4 and Gazebo 2
-runs on Java JRE 1.8

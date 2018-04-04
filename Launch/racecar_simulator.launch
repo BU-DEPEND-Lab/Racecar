@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-  <arg name="world_name" default="racecar" />
-  <include file="$(find racecar_gazebo)/launch/racecar.launch">
-    <arg name="world_name" value="$(arg world_name)" />
-  </include>
-</launch>
