@@ -81,7 +81,7 @@ pid_controller : node {
 
 stopsign_detection : node {
   DEFS 
-    cascade_filename: string "/home/nvidia/git/Racecar/sensor_perception/camera/stopsign_detection/data/stopsign_detector.xml"
+    cascade_filename: string "/home/nvidia/catkin_ws/src/radlast_16_f1_tenth_cam_gpu/user_src/stopsign_classifier.xml"
     display_camera: bool false 
   PUBLISHES
     stop_sign_distance { TOPIC distance }
