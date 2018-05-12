@@ -1,0 +1,89 @@
+settings : module_settings {
+  MODULE_BASE_PATH "src"
+}
+
+basic_rate : duration 50msec
+
+scan : topic {
+  FIELDS
+    data : array {
+             TYPE string "float32"
+             SIZE uint64 2
+             VALUES 0.0 0.0
+           } 
+}
+
+drive_param : topic {
+  FIELDS
+    velocity : float32 0
+    angle    : float32 0
+}
+
+error : topic {
+  FIELDS
+    data: int32 -1 
+}
+
+key_topic : topic {
+  FIELDS
+    key : int16 0
+}
+
+
+pid_controller : node {
+  DEFS
+    max_speed: float32 10 
+    print_debug: bool false
+  PUBLISHES
+    drive_parameters { TOPIC drive_param }
+  SUBSCRIBES
+    distance { TOPIC error MAXLATENCY 10msec } 
+    key_input { TOPIC key_topic MAXLATENCY 1msec }
+  PERIOD basic_rate
+  CXX { HEADER "pid_controller.h" FILENAME "pid_controller.cpp" CLASS "PidController"}
+}
+
+dist_finder : node {
+  PUBLISHES
+    distance { TOPIC error }
+  SUBSCRIBES
+    scan_data { TOPIC scan MAXLATENCY 10msec }
+  PERIOD basic_rate
+  CXX { HEADER "dist_finder.h" FILENAME "dist_finder.cpp" CLASS "DistFinder"}
+}
+
+keyboard : node {
+  DEFS
+    print_debug: bool true
+  PUBLISHES
+    key_event { TOPIC key_topic }
+  PERIOD 10msec
+  CXX { HEADER "keyboard.h" FILENAME "keyboard.cpp" CLASS "Keyboard" }  
+}
+
+controller_gateway : node {
+  DEFS
+    print_debug: bool true
+  PUBLISHES
+    scan_data { TOPIC scan }
+  SUBSCRIBES
+    drive_parameters { TOPIC drive_param MAXLATENCY 1000msec }
+  PERIOD 10msec
+  CXX { HEADER "controller_gateway.h" FILENAME "controller_gateway.cpp" CLASS "ControllerGateway" }  
+}
+
+sys1 : linux {
+  NODES_UID 1000
+  IMG "linux.img"
+  IP 192.168.10.201
+  NODES
+    pid_controller
+    dist_finder
+    keyboard
+    controller_gateway
+}
+
+plant : plant {
+  MACHINES
+    host_computer { OS sys1 }
+}
