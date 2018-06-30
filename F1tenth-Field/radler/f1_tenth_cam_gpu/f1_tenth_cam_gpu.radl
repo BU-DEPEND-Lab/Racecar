@@ -5,6 +5,13 @@ opencv_lib : cmake_library {
   CMAKE_VAR_INCLUDE_DIRS "OpenCV_INCLUDE_DIRS"
 }
 
+curses_lib : cmake_library {
+  PATH "/usr/share/cmake-3.5/Modules"
+  CMAKE_MODULE "Curses"
+  CMAKE_VAR_LIBRARIES "CURSES_LIBRARIES"
+  CMAKE_VAR_INCLUDE_DIRS "CURSES_INCLUDE_DIR"
+}
+
 settings : module_settings {
   MODULE_BASE_PATH "src"
 }
@@ -95,7 +102,7 @@ key : node {
   PUBLISHES
     key_event { TOPIC key_topic }
   PERIOD 10msec
-  CXX { HEADER "key.h" FILENAME "key.cpp" CLASS "Key" }  
+  CXX { HEADER "key.h" FILENAME "key.cpp" CLASS "Key" LIB curses_lib}
 }
 
 controller_gateway : node {
