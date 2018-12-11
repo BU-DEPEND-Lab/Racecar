@@ -1,3 +1,10 @@
+curses_lib : cmake_library {
+  PATH "/usr/share/cmake-3.5/Modules"
+  CMAKE_MODULE "Curses"
+  CMAKE_VAR_LIBRARIES "CURSES_LIBRARIES"
+  CMAKE_VAR_INCLUDE_DIRS "CURSES_INCLUDE_DIRS"
+}
+
 settings : module_settings {
   MODULE_BASE_PATH "src"
 }
@@ -40,7 +47,7 @@ pid_controller : node {
     distance { TOPIC error MAXLATENCY 10msec } 
     key_input { TOPIC key_topic MAXLATENCY 1msec }
   PERIOD basic_rate
-  CXX { HEADER "pid_controller.h" FILENAME "pid_controller.cpp" CLASS "PidController"}
+  CXX { HEADER "pid_controller.h" FILENAME "pid_controller.cpp" CLASS "PidController" LIB curses_lib}
 }
 
 dist_finder : node {
@@ -58,7 +65,7 @@ keyboard : node {
   PUBLISHES
     key_event { TOPIC key_topic }
   PERIOD 10msec
-  CXX { HEADER "keyboard.h" FILENAME "keyboard.cpp" CLASS "Keyboard" }  
+  CXX { HEADER "keyboard.h" FILENAME "keyboard.cpp" CLASS "Keyboard" LIB curses_lib}
 }
 
 controller_gateway : node {
